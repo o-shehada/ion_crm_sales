@@ -1,36 +1,37 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-11-23 14:24:39.569951",
+ "creation": "2026-04-27 05:58:50.079923",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "department",
-  "surveyor",
-  "template"
+  "question",
+  "template",
+  "column_break_lkeo",
+  "answer"
  ],
  "fields": [
   {
-   "fieldname": "department",
-   "fieldtype": "Link",
+   "fieldname": "question",
+   "fieldtype": "Small Text",
    "in_list_view": 1,
-   "label": "Department",
-   "options": "Department",
+   "label": "Question",
    "reqd": 1
   },
   {
-   "fieldname": "surveyor",
-   "fieldtype": "Link",
+   "fieldname": "column_break_lkeo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "answer",
+   "fieldtype": "Small Text",
    "in_list_view": 1,
-   "label": "Surveyor",
-   "options": "User",
-   "reqd": 1
+   "label": "Answer"
   },
   {
    "fieldname": "template",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Template",
    "options": "Technical Survey Template"
   }
@@ -39,13 +40,14 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-27 06:07:06.595320",
+ "modified": "2026-04-27 06:32:13.808396",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
- "name": "Technical Surveyor",
+ "name": "Technical Survey Template Table",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

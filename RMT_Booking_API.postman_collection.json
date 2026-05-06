@@ -1,0 +1,925 @@
+{
+	"info": {
+		"name": "RMT Booking API",
+		"description": "RMT Booking Lifecycle API for ion_crm_sales.\n\nSet the {{base_url}} variable to your Frappe site URL (e.g. http://localhost:8000).\n\n**How to test:**\n1. Run all requests in the '0. Setup Prerequisites' folder first\n2. Then run the booking lifecycle requests in order (1–6)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "key",
+				"value": "Authorization",
+				"type": "string"
+			},
+			{
+				"key": "value",
+				"value": "token {{api_key}}:{{api_secret}}",
+				"type": "string"
+			},
+			{
+				"key": "in",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "4dfa9a9d093a8fd",
+			"type": "string"
+		},
+		{
+			"key": "api_secret",
+			"value": "799851d72aaded2",
+			"type": "string"
+		},
+		{
+			"key": "booking_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "disrupter_id",
+			"value": "D-ION-009",
+			"type": "string"
+		},
+		{
+			"key": "package_id",
+			"value": "HOME700",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. Setup Prerequisites",
+			"description": "Run these requests ONCE before testing the booking API. They create the required master data (Item, Item Group, Distributor, etc.).\n\nAuthentication is handled automatically via API token in the Authorization header.",
+			"item": [
+				{
+					"name": "0.1 Check Selling Settings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/resource/Selling Settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "resource", "Selling Settings"]
+						},
+						"description": "Check current Selling Settings to verify customer_group and territory are set."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"var data = jsonData.data;",
+									"",
+									"if (data.customer_group) {",
+									"    pm.collectionVariables.set('customer_group', data.customer_group);",
+									"    console.log('customer_group:', data.customer_group);",
+									"} else {",
+									"    console.warn('WARNING: customer_group is not set in Selling Settings!');",
+									"}",
+									"",
+									"if (data.territory) {",
+									"    pm.collectionVariables.set('territory', data.territory);",
+									"    console.log('territory:', data.territory);",
+									"} else {",
+									"    console.warn('WARNING: territory is not set in Selling Settings!');",
+									"}",
+									"",
+									"pm.test('Selling Settings has customer_group', function() {",
+									"    pm.expect(data.customer_group).to.not.be.empty;",
+									"});",
+									"pm.test('Selling Settings has territory', function() {",
+									"    pm.expect(data.territory).to.not.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "0.2 Set Selling Settings (if empty)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_group\": \"All Customer Groups\",\n    \"territory\": \"All Territories\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/resource/Selling Settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "resource", "Selling Settings"]
+						},
+						"description": "Sets default customer_group and territory in Selling Settings. Only run this if step 0.1 showed they are empty."
+					}
+				},
+				{
+					"name": "0.3 Create Item Group (Services)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_group_name\": \"Services\",\n    \"parent_item_group\": \"All Item Groups\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/resource/Item Group",
+							"host": ["{{base_url}}"],
+							"path": ["api", "resource", "Item Group"]
+						},
+						"description": "Creates the 'Services' item group. Will return an error if it already exists — that's OK, just move on."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var status = pm.response.code;",
+									"if (status === 200 || status === 409) {",
+									"    console.log('Item Group \"Services\" is ready.');",
+									"} else {",
+									"    console.log('Status:', status, '- may already exist, that is fine.');",
+									"}",
+									"pm.test('Item Group created or already exists', function() {",
+									"    pm.expect(status).to.be.oneOf([200, 409, 417]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "0.4 Create Item (HOME700)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_code\": \"HOME700\",\n    \"item_name\": \"Home Internet 700 LYD\",\n    \"item_group\": \"Services\",\n    \"stock_uom\": \"Nos\",\n    \"is_stock_item\": 0,\n    \"include_item_in_manufacturing\": 0,\n    \"standard_rate\": 700,\n    \"description\": \"Home internet package - 700 LYD (RMT)\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/resource/Item",
+							"host": ["{{base_url}}"],
+							"path": ["api", "resource", "Item"]
+						},
+						"description": "Creates the HOME700 service item used by the RMT booking. Will error if it already exists — that's OK."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var status = pm.response.code;",
+									"if (status === 200) {",
+									"    console.log('Item HOME700 created successfully.');",
+									"} else {",
+									"    console.log('Status:', status, '- item may already exist, that is fine.');",
+									"}",
+									"pm.test('Item created or already exists', function() {",
+									"    pm.expect(status).to.be.oneOf([200, 409, 417]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "0.5 Create Distributor (D-ION-009)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"distributor_name\": \"ION Test Distributor\",\n    \"distributor_codeid\": \"D-ION-009\",\n    \"status\": \"Active\",\n    \"contact_person_name\": \"Ahmed Test\",\n    \"contact_phone_number\": \"+218911223344\",\n    \"city\": \"Benghazi\",\n    \"rmt_username\": \"dist_009\",\n    \"rmt_password\": \"test1234\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/resource/Distributor",
+							"host": ["{{base_url}}"],
+							"path": ["api", "resource", "Distributor"]
+						},
+						"description": "Creates a test Distributor with ID 'D-ION-009' and Active status. This is the distributor referenced in the booking requests."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var status = pm.response.code;",
+									"if (status === 200) {",
+									"    var data = pm.response.json().data;",
+									"    console.log('Distributor created:', data.name, '| Code:', data.distributor_codeid);",
+									"} else {",
+									"    console.log('Status:', status, '- distributor may already exist.');",
+									"}",
+									"pm.test('Distributor created or already exists', function() {",
+									"    pm.expect(status).to.be.oneOf([200, 409, 417]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "0.6 Verify Distributor Exists",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/resource/Distributor?filters=[[\"distributor_codeid\",\"=\",\"{{disrupter_id}}\"]]&fields=[\"name\",\"distributor_codeid\",\"status\",\"distributor_name\"]",
+							"host": ["{{base_url}}"],
+							"path": ["api", "resource", "Distributor"],
+							"query": [
+								{
+									"key": "filters",
+									"value": "[[\"distributor_codeid\",\"=\",\"{{disrupter_id}}\"]]"
+								},
+								{
+									"key": "fields",
+									"value": "[\"name\",\"distributor_codeid\",\"status\",\"distributor_name\"]"
+								}
+							]
+						},
+						"description": "Verifies the distributor with the given code exists and is Active."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('At least one distributor found', function() {",
+									"    pm.expect(jsonData.data.length).to.be.greaterThan(0);",
+									"});",
+									"if (jsonData.data.length > 0) {",
+									"    pm.test('Distributor is Active', function() {",
+									"        pm.expect(jsonData.data[0].status).to.equal('Active');",
+									"    });",
+									"    console.log('Distributor:', JSON.stringify(jsonData.data[0], null, 2));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "1. Booking Lifecycle",
+			"description": "Core booking lifecycle requests. Run in order: Create → Get → Confirm → Get → Cancel → Renew.",
+			"item": [
+				{
+					"name": "1. Create Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_name\": \"Salem Al-Fitouri\",\n    \"client_national_id\": \"152025041129\",\n    \"client_phone\": \"+218922334455\",\n    \"location\": \"Benghazi - Al Kwayfiya\",\n    \"package_id\": \"{{package_id}}\",\n    \"package_price\": 700,\n    \"payment_method\": \"cheque\",\n    \"payment_amount\": 1000,\n    \"disrupter_id\": \"{{disrupter_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.create_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.create_booking"]
+						},
+						"description": "Creates a new RMT booking for a distributor's client.\n\nExpected: status=Pending, financial calculations populated."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test('Status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (jsonData.message) {",
+									"    var msg = jsonData.message;",
+									"    pm.collectionVariables.set('booking_id', msg.booking_id);",
+									"    console.log('Created booking:', msg.booking_id);",
+									"",
+									"    pm.test('Booking status is Pending', function() {",
+									"        pm.expect(msg.status).to.equal('Pending');",
+									"    });",
+									"    pm.test('Financial: client_credit = 300', function() {",
+									"        pm.expect(msg.financial.client_credit).to.equal(300);",
+									"    });",
+									"    pm.test('Financial: company_share = 700', function() {",
+									"        pm.expect(msg.financial.company_share).to.equal(700);",
+									"    });",
+									"    pm.test('Financial: distributor_commission = 70', function() {",
+									"        pm.expect(msg.financial.distributor_commission).to.equal(70);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "2. Get Booking (Pending)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.get_booking?booking_id={{booking_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.get_booking"],
+							"query": [
+								{
+									"key": "booking_id",
+									"value": "{{booking_id}}"
+								}
+							]
+						},
+						"description": "Fetches full booking details. Verifies it is in Pending state."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Booking status is Pending', function() {",
+									"    pm.expect(jsonData.message.status).to.equal('Pending');",
+									"});",
+									"pm.test('Has financial data', function() {",
+									"    pm.expect(jsonData.message.financial).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "3. Confirm Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.confirm_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.confirm_booking"]
+						},
+						"description": "Confirms the pending booking. Should:\n- Set status to Confirmed\n- Assign a contract number (ION-CT-...)\n- Create a Customer record\n- Create a Sales Invoice (draft)"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"",
+									"if (jsonData.message) {",
+									"    var msg = jsonData.message;",
+									"    pm.test('Booking status is Confirmed', function() {",
+									"        pm.expect(msg.status).to.equal('Confirmed');",
+									"    });",
+									"    pm.test('Contract number assigned', function() {",
+									"        pm.expect(msg.contract_number).to.include('ION-CT-');",
+									"    });",
+									"    pm.test('Contract info returned', function() {",
+									"        pm.expect(msg.contract).to.not.be.undefined;",
+									"        pm.expect(msg.contract.number).to.include('ION-CT-');",
+									"    });",
+									"    console.log('Contract:', msg.contract_number);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "4. Get Booking (Confirmed)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.get_booking?booking_id={{booking_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.get_booking"],
+							"query": [
+								{
+									"key": "booking_id",
+									"value": "{{booking_id}}"
+								}
+							]
+						},
+						"description": "Verify the booking is now Confirmed, has contract info and invoice references."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Booking is Confirmed', function() {",
+									"    pm.expect(jsonData.message.status).to.equal('Confirmed');",
+									"});",
+									"pm.test('Has contract info', function() {",
+									"    pm.expect(jsonData.message.contract).to.not.be.undefined;",
+									"});",
+									"pm.test('Has invoice references', function() {",
+									"    pm.expect(jsonData.message.references).to.not.be.undefined;",
+									"    pm.expect(jsonData.message.references.length).to.be.greaterThan(0);",
+									"});",
+									"console.log('References:', JSON.stringify(jsonData.message.references));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "5. Cancel Confirmed → Failed",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id}}\",\n    \"reason\": \"No internet coverage on technical visit\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.cancel_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.cancel_booking"]
+						},
+						"description": "Cancels a CONFIRMED booking → status becomes Failed, refund info returned, Credit Note created."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"",
+									"if (jsonData.message) {",
+									"    var msg = jsonData.message;",
+									"    pm.test('Booking status is Failed', function() {",
+									"        pm.expect(msg.status).to.equal('Failed');",
+									"    });",
+									"    pm.test('Refund info returned', function() {",
+									"        pm.expect(msg.refund).to.not.be.undefined;",
+									"        pm.expect(msg.refund.amount_refunded).to.equal(1000);",
+									"    });",
+									"    console.log('Refund:', JSON.stringify(msg.refund));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "6. Create Another Booking (for cancel-pending test)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_name\": \"Omar Khalifa\",\n    \"client_national_id\": \"198876543210\",\n    \"client_phone\": \"+218925551234\",\n    \"location\": \"Tripoli - Hay Al Andalus\",\n    \"package_id\": \"{{package_id}}\",\n    \"package_price\": 700,\n    \"payment_method\": \"cash\",\n    \"payment_amount\": 700,\n    \"disrupter_id\": \"{{disrupter_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.create_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.create_booking"]
+						},
+						"description": "Creates a second booking to test the cancel-while-pending flow."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"if (jsonData.message) {",
+									"    pm.collectionVariables.set('booking_id_2', jsonData.message.booking_id);",
+									"    console.log('Created 2nd booking:', jsonData.message.booking_id);",
+									"    pm.test('Client credit is 0 (exact payment)', function() {",
+									"        pm.expect(jsonData.message.financial.client_credit).to.equal(0);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "7. Cancel Pending → Cancelled",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id_2}}\",\n    \"reason\": \"Client changed their mind\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.cancel_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.cancel_booking"]
+						},
+						"description": "Cancels a PENDING booking → status becomes Cancelled (no financial impact, no refund)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"if (jsonData.message) {",
+									"    pm.test('Booking status is Cancelled', function() {",
+									"        pm.expect(jsonData.message.status).to.equal('Cancelled');",
+									"    });",
+									"    pm.test('No refund info (no financial impact)', function() {",
+									"        pm.expect(jsonData.message.refund).to.be.undefined;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "8. Create + Confirm (for renewal test)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_name\": \"Fatima Benali\",\n    \"client_national_id\": \"200112345678\",\n    \"client_phone\": \"+218913334455\",\n    \"location\": \"Misrata - Central\",\n    \"package_id\": \"{{package_id}}\",\n    \"package_price\": 700,\n    \"payment_method\": \"cash\",\n    \"payment_amount\": 700,\n    \"disrupter_id\": \"{{disrupter_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.create_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.create_booking"]
+						},
+						"description": "Creates a 3rd booking that we'll confirm and then renew."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"if (jsonData.message) {",
+									"    pm.collectionVariables.set('booking_id_3', jsonData.message.booking_id);",
+									"    console.log('Created 3rd booking:', jsonData.message.booking_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "9. Confirm Booking #3",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id_3}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.confirm_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.confirm_booking"]
+						},
+						"description": "Confirms booking #3 so we can test renewal."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"pm.test('Booking is Confirmed', function() {",
+									"    pm.expect(jsonData.message.status).to.equal('Confirmed');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "10. Renew Booking #3",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id_3}}\",\n    \"payment_method\": \"cash\",\n    \"payment_amount\": 700\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.renew_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.renew_booking"]
+						},
+						"description": "Renews confirmed booking #3 — creates a new booking for the same client/package."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
+									"if (jsonData.message) {",
+									"    var msg = jsonData.message;",
+									"    pm.test('New booking created', function() {",
+									"        pm.expect(msg.booking_id).to.include('RMT-');",
+									"    });",
+									"    pm.test('Renewed from original', function() {",
+									"        pm.expect(msg.renewed_from).to.not.be.undefined;",
+									"    });",
+									"    pm.test('Same client name', function() {",
+									"        pm.expect(msg.client_name).to.equal('Fatima Benali');",
+									"    });",
+									"    console.log('Renewed booking:', msg.booking_id, 'from', msg.renewed_from);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. Error Cases",
+			"description": "Test validation and error handling.",
+			"item": [
+				{
+					"name": "ERR: Create with invalid distributor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_name\": \"Test Client\",\n    \"client_national_id\": \"999999999\",\n    \"client_phone\": \"+218900000000\",\n    \"location\": \"Nowhere\",\n    \"package_id\": \"HOME700\",\n    \"package_price\": 700,\n    \"payment_method\": \"cash\",\n    \"payment_amount\": 700,\n    \"disrupter_id\": \"INVALID-DIST-999\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.create_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.create_booking"]
+						},
+						"description": "Should fail with 'Distributor not found' error."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should return error (non-200)', function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 417, 403, 500]);",
+									"});",
+									"console.log('Error response:', pm.response.text().substring(0, 500));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "ERR: Create with missing fields",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_name\": \"Test Client\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.create_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.create_booking"]
+						},
+						"description": "Should fail with 'Missing required fields' error."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should return error', function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 417, 403, 500]);",
+									"});",
+									"console.log('Error response:', pm.response.text().substring(0, 500));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "ERR: Confirm already confirmed",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id_3}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.confirm_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.confirm_booking"]
+						},
+						"description": "Should fail because booking_id_3 is already confirmed."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should return error', function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 417, 403, 500]);",
+									"});",
+									"console.log('Error:', pm.response.text().substring(0, 500));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "ERR: Cancel already cancelled",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id_2}}\",\n    \"reason\": \"Trying again\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.cancel_booking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.cancel_booking"]
+						},
+						"description": "Should fail because booking_id_2 is already cancelled."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should return error', function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 417, 403, 500]);",
+									"});",
+									"console.log('Error:', pm.response.text().substring(0, 500));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "ERR: Get non-existent booking",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/method/ion_crm_sales.ion_crm_sales.rmt_api.get_booking?booking_id=RMT-000000-9999",
+							"host": ["{{base_url}}"],
+							"path": ["api", "method", "ion_crm_sales.ion_crm_sales.rmt_api.get_booking"],
+							"query": [
+								{
+									"key": "booking_id",
+									"value": "RMT-000000-9999"
+								}
+							]
+						},
+						"description": "Should fail with 'Not Found' error."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should return 404 or error', function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([404, 417, 500]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

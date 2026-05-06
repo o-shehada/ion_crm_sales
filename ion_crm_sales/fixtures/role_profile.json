@@ -2,6 +2,66 @@
  {
   "docstatus": 0,
   "doctype": "Role Profile",
+  "modified": "2025-06-12 12:02:55.178679",
+  "name": "HR",
+  "role_profile": "HR",
+  "roles": [
+   {
+    "parent": "HR",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "HR User"
+   },
+   {
+    "parent": "HR",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "HR Manager"
+   },
+   {
+    "parent": "HR",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Leave Approver"
+   },
+   {
+    "parent": "HR",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Expense Approver"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-02-04 23:27:14.859707",
+  "name": "موظفين",
+  "role_profile": "موظفين",
+  "roles": [
+   {
+    "parent": "موظفين",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "parent": "موظفين",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Material Request"
+   },
+   {
+    "parent": "موظفين",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Department Manager"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
   "modified": "2025-11-09 07:04:54.719991",
   "name": "PMO",
   "role_profile": "PMO",
@@ -848,6 +908,33 @@
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Sales Manager"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-02-04 23:31:31.384496",
+  "name": "Material Request",
+  "role_profile": "Material Request",
+  "roles": [
+   {
+    "parent": "Material Request",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Material Request"
+   },
+   {
+    "parent": "Material Request",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Employee"
+   },
+   {
+    "parent": "Material Request",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Department Manager"
    }
   ]
  }

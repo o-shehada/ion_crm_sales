@@ -91,6 +91,16 @@
   "notes_tab",
   "notes_html",
   "notes",
+  "custom_survey",
+  "custom_surveyor_manager",
+  "custom_section_break_nixpu",
+  "custom_surveyors",
+  "custom_section_break_ikapp",
+  "custom_survey_template",
+  "custom_column_break_tujep",
+  "custom_survey_attachment",
+  "custom_technical",
+  "custom_technical_survey_template_table",
   "dashboard_tab"
  ],
  "fields": [
@@ -614,6 +624,57 @@
    "label": "Notes",
    "no_copy": 1,
    "options": "CRM Note"
+  },
+  {
+   "fieldname": "custom_survey",
+   "fieldtype": "Tab Break",
+   "label": "Survey"
+  },
+  {
+   "fieldname": "custom_surveyor_manager",
+   "fieldtype": "Link",
+   "label": "Surveyor Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_section_break_nixpu",
+   "fieldtype": "Section Break",
+   "label": "Surveyors"
+  },
+  {
+   "fieldname": "custom_surveyors",
+   "fieldtype": "Table",
+   "label": "Surveyors",
+   "options": "Technical Surveyor"
+  },
+  {
+   "fieldname": "custom_section_break_ikapp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_survey_template",
+   "fieldtype": "Data",
+   "label": "Survey Template"
+  },
+  {
+   "fieldname": "custom_column_break_tujep",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_survey_attachment",
+   "fieldtype": "Attach",
+   "label": "Survey Attachment"
+  },
+  {
+   "fieldname": "custom_technical",
+   "fieldtype": "Tab Break",
+   "label": "Technical"
+  },
+  {
+   "fieldname": "custom_technical_survey_template_table",
+   "fieldtype": "Table",
+   "label": "Technical Survey Template Table",
+   "options": "Technical Survey Template Table"
   },
   {
    "depends_on": "eval:!doc.__islocal",

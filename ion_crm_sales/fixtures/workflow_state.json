@@ -2,6 +2,168 @@
  {
   "docstatus": 0,
   "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-29 13:22:15.879059",
+  "name": "Review By Applicant",
+  "style": "Warning",
+  "workflow_state_name": "Review By Applicant"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 15:38:28.340018",
+  "name": "Rejected By HR User",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By HR User"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:28:14.746849",
+  "name": "Rejected By IT Administrator",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By IT Administrator"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 15:22:53.022682",
+  "name": "Canceled",
+  "style": "Danger",
+  "workflow_state_name": "Canceled"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:36:32.860636",
+  "name": "Rejected By Technical Team",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By Technical Team"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:40:42.811539",
+  "name": "Approved By Accounts Manager Final",
+  "style": "Success",
+  "workflow_state_name": "Approved By Accounts Manager Final"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 14:45:44.016860",
+  "name": "Rejected By Stock Manager",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By Stock Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 15:38:07.003371",
+  "name": "Approved By HR User",
+  "style": "Warning",
+  "workflow_state_name": "Approved By HR User"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:34:45.457691",
+  "name": "Approved By Projects Manager",
+  "style": "Warning",
+  "workflow_state_name": "Approved By Projects Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:35:01.464310",
+  "name": "Rejected By Projects Manager",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By Projects Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:40:58.650055",
+  "name": "Rejected By Accounts Manager",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By Accounts Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:28:00.433367",
+  "name": "Approved By IT Administrator",
+  "style": "Warning",
+  "workflow_state_name": "Approved By IT Administrator"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:40:29.205528",
+  "name": "Approved By Accounts Manager",
+  "style": "Warning",
+  "workflow_state_name": "Approved By Accounts Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:26:27.485840",
+  "name": "Rejected By Purchase Manager",
+  "style": "Danger",
+  "workflow_state_name": "Rejected By Purchase Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 13:36:17.860393",
+  "name": "Approved By Technical Team",
+  "style": "Warning",
+  "workflow_state_name": "Approved By Technical Team"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-26 13:44:53.052619",
+  "name": "Created By Employee",
+  "style": "Warning",
+  "workflow_state_name": "Created By Employee"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-26 13:47:02.750608",
+  "name": "Approved By Purchase Manager",
+  "style": "Warning",
+  "workflow_state_name": "Approved By Purchase Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-06-28 14:45:29.266118",
+  "name": "Approved By Stock Manager",
+  "style": "Success",
+  "workflow_state_name": "Approved By Stock Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
   "icon": "question-sign",
   "modified": "2025-07-25 22:36:40.141531",
   "name": "Pending",
@@ -183,19 +345,28 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2025-07-29 20:40:26.983192",
-  "name": "Accepted",
+  "modified": "2025-11-18 19:25:10.502086",
+  "name": "Draft",
   "style": "",
-  "workflow_state_name": "Accepted"
+  "workflow_state_name": "Draft"
  },
  {
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2025-07-29 20:13:07.331986",
-  "name": "Requirements Gathering",
+  "modified": "2025-12-19 21:08:19.401245",
+  "name": "Posted",
   "style": "",
-  "workflow_state_name": "Requirements Gathering"
+  "workflow_state_name": "Posted"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-07-29 20:40:26.983192",
+  "name": "Accepted",
+  "style": "",
+  "workflow_state_name": "Accepted"
  },
  {
   "docstatus": 0,
@@ -205,15 +376,6 @@
   "name": "Rejected",
   "style": "Danger",
   "workflow_state_name": "Rejected"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2025-07-29 20:22:19.788897",
-  "name": "Qualifying",
-  "style": "",
-  "workflow_state_name": "Qualifying"
  },
  {
   "docstatus": 0,
@@ -255,18 +417,18 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2025-11-18 19:25:10.502086",
-  "name": "Draft",
+  "modified": "2025-07-29 20:22:19.788897",
+  "name": "Qualifying",
   "style": "",
-  "workflow_state_name": "Draft"
+  "workflow_state_name": "Qualifying"
  },
  {
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2025-12-19 21:08:19.401245",
-  "name": "Posted",
+  "modified": "2025-07-29 20:13:07.331986",
+  "name": "Requirements Gathering",
   "style": "",
-  "workflow_state_name": "Posted"
+  "workflow_state_name": "Requirements Gathering"
  }
 ]

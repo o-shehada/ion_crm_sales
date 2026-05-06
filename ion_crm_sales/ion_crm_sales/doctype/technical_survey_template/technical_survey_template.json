@@ -9,7 +9,7 @@
   "template_name",
   "description",
   "survey_fields_section",
-  "fields"
+  "technical_survey_template_table"
  ],
  "fields": [
   {
@@ -28,20 +28,19 @@
   {
    "fieldname": "survey_fields_section",
    "fieldtype": "Section Break",
-   "label": "Survey Fields"
+   "label": "Q&A"
   },
   {
-   "fieldname": "fields",
+   "fieldname": "technical_survey_template_table",
    "fieldtype": "Table",
-   "label": "Fields",
-   "options": "Technical Survey Template Field",
-   "reqd": 1
+   "label": "Technical Survey Template Table",
+   "options": "Technical Survey Template Table"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-10 19:22:17.427733",
+ "modified": "2026-04-27 06:00:31.660713",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Technical Survey Template",

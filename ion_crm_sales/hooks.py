@@ -77,11 +77,7 @@ fixtures = [
     "Print Format",
     "Role",
     "Role Profile",
-    "Custom DocPerm",
-    "Web Form",
     "Opportunity Type",
-    "Sales Stage",
-    "Price List",
     {"dt": "Dashboard Chart", "filters": [["is_standard", "=", 0]]},
     # {"doctype": "DocType", "filters": {"module": ["=", "Ion Crm Sales"]}},
     # {"doctype": "Workflow",
@@ -137,7 +133,12 @@ scheduler_events = {
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Opportunity": "public/js/opportunity_survey.js",
+    "Opportunity SM": "public/js/opportunity_survey.js",
+    "Opportunity Hotels": "public/js/opportunity_survey.js",
+    "Opportunity Tenders": "public/js/opportunity_survey.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
