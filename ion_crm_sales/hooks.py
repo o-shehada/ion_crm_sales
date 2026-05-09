@@ -72,7 +72,23 @@ fixtures = [
     "Workflow",
     "Workflow State",
     "Workflow Action Master",
-    {"dt": "Custom Field", "filters": [["module", "=", "Ion Crm Sales"]]},
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["module", "=", "Ion Crm Sales"],
+            [
+                "dt",
+                "not in",
+                [
+                    "Opportunity",
+                    "Opportunity Tender",
+                    "Opportunity SM",
+                    "Opportunity Hotels",
+                    "Opportunity Item",
+                ],
+            ],
+        ],
+    },
     "Property Setter",
     "Print Format",
     "Role",
