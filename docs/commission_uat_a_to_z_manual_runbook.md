@@ -538,6 +538,31 @@ Sales Team:
 Expected:
 
 - Late payment penalty applies to AM commission only.
+- Penalty anchor date is `Sales Invoice.due_date`; if missing, the engine uses `posting_date`.
+- For `Yearly`, grace period is 90 days, then a 50% reduction applies once, then another 10% reduction for every 30-day block after grace.
+- In this case, from `2026-01-10` to `2026-04-20` is 100 days late. Grace is 90 days, so over-grace is 10 days.
+- Expected penalty factor is `1.0 - 0.50 - (0.10 * 0) = 0.50`.
+- Only Mariam Al-Fitouri is AM in this scenario, so her AM commission from this invoice should be reduced by 50%.
+- Huda Al-Werfalli is not AM, so her commission should not be reduced by the late payment penalty.
+
+Additional penalty plan checks:
+
+| Payment Plan | Grace Period | Cadence After Grace | Test Example | Expected |
+|---|---:|---:|---|---|
+| Yearly | 90 days | 30 days | Due `2026-01-10`, paid `2026-04-20` | 50% AM reduction |
+| 6 Months | 42 days | 14 days | Due `2026-01-10`, paid `2026-02-25` | 50% AM reduction |
+| Quarterly | 21 days | 7 days | Due `2026-01-10`, paid `2026-02-07` | 60% AM reduction |
+
+Penalty formula:
+
+```text
+if fully_paid_on - due_date <= grace_days:
+    factor = 1.0
+else:
+    over = late_days - grace_days
+    blocks = over // cadence_days
+    factor = max(0.0, 1.0 - 0.50 - 0.10 * blocks)
+```
 
 ### Scenario B11: Penalty Exception
 
@@ -548,6 +573,7 @@ Use same setup as B10, but check:
 Expected:
 
 - No late penalty.
+- AM commission should remain at the normal calculated value even when the invoice is paid after the grace period.
 
 ### Scenario B12: Partnership at Cost
 
@@ -725,5 +751,5 @@ Use these rules when reviewing results:
 - Unpaid invoices are excluded.
 - BA exclusions are customer-level.
 - AM late payment penalty affects AM commission only.
+- Penalty is controlled by `Sales Invoice.custom_payment_plan`, `Sales Invoice.due_date`, full payment date, and `Sales Invoice.custom_penalty_exception_approved`.
 - `Service Active?` on Opportunity does not affect commission unless a future business rule is added.
-

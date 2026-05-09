@@ -98,8 +98,7 @@ def make_quotation(source_name, target_doc=None):
 
 		quotation.run_method("set_missing_values")
 		quotation.run_method("calculate_taxes_and_totals")
-		if not source.get("items", []):
-			quotation.custom_opportunity_hotels = source.name
+		quotation.custom_opportunity_hotels = source.name
 		quotation.custom_opportunity_from = "Hotels"
 
 

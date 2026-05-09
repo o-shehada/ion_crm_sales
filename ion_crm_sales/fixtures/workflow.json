@@ -2615,6 +2615,22 @@
     "workflow_builder_id": "5"
    },
    {
+    "allow_edit": "Tenders Sales",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Tenders",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 1,
+    "state": "Accepted",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": "8"
+   },
+   {
     "allow_edit": "All",
     "avoid_status_override": 0,
     "doc_status": "0",
@@ -2673,6 +2689,19 @@
     "send_email_to_creator": 0,
     "state": "Surveyed",
     "workflow_builder_id": "action-3"
+   },
+   {
+    "action": "Quote",
+    "allow_self_approval": 1,
+    "allowed": "Tenders Sales",
+    "condition": null,
+    "next_state": "Accepted",
+    "parent": "Tenders",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Approved",
+    "workflow_builder_id": "action-6"
    },
    {
     "action": "Reject",
