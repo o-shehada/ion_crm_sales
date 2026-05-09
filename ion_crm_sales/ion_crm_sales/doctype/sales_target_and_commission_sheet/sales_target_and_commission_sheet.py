@@ -1,41 +1,33 @@
-
 # -*- coding: utf-8 -*-
+"""
+Controller for the Sales Target and Commission Sheet doctype.
+
+Orchestrates calls to both the Sales and BA commission engines
+during validate, before_submit, and on_update_after_submit.
+"""
+
 import frappe
 from frappe.model.document import Document
 from frappe.utils import flt
 
-# SALES engine (two-level absolute path because controller is outside /commission)
 from ion_crm_sales.ion_crm_sales.commission.compute import (
     compute_totals_quarterly as compute_sales_quarterly,
+)
+from ion_crm_sales.ion_crm_sales.commission.ba import compute_ba_for_sheet
+from ion_crm_sales.ion_crm_sales.commission.gl import post_accrual
+from ion_crm_sales.ion_crm_sales.commission.helpers import (
+    ensure_quarter_on,
     get_quarter_window,
     quarter_target_from_distribution,
 )
-
-# BA engine (two-level absolute)
-from ion_crm_sales.ion_crm_sales.commission.ba import compute_ba_for_sheet
-
 
 
 ALLOWED_STATES = {"Draft", "Submitted", "Approved"}
 
 
-def _ensure_quarter_on(doc: Document) -> str:
-    """
-    Normalize doc.quarter so engines that expect 'quarter' keep working.
-    Returns 'Q1'/'Q2'/'Q3'/'Q4'. Throws if missing.
-    """
-    q = getattr(doc, "custom_quarter", None) or getattr(doc, "quarter", None)
-    if not q:
-        frappe.throw("Please set Quarter (Q1/Q2/Q3/Q4) on the sheet.")
-    # Also write back to doc.quarter so compute modules see it
-    if getattr(doc, "quarter", None) != q:
-        setattr(doc, "quarter", q)
-    return q
-
-
 class SalesTargetandCommissionSheet(Document):
     def validate(self):
-        _ensure_quarter_on(self)
+        ensure_quarter_on(self)
 
         # SALES engine (Home/Hotspot)
         compute_sales_quarterly(self)
@@ -53,31 +45,64 @@ class SalesTargetandCommissionSheet(Document):
         # Ensure every line has a quarter target (Sales/BA)
         for ln in (self.get("commission_lines") or []):
             if not flt(ln.target_value):
-                frappe.throw(f"Missing quarter target for {ln.sales_person} in {ln.department}. "
-                             f"Make sure Sales Person Targets are entered and have a Monthly Distribution.")
+                frappe.throw(
+                    f"Missing quarter target for {ln.sales_person} in {ln.department}. "
+                    f"Make sure Sales Person Targets are entered and have a Monthly Distribution."
+                )
+
+    def before_save(self):
+        if self._should_post_accrual_from_workflow():
+            post_accrual(self, save=False)
+
+    def before_update_after_submit(self):
+        if self._should_post_accrual_from_workflow():
+            post_accrual(self, save=False)
 
     def on_update_after_submit(self):
         # Allow recompute while not Posted
         if self.status in ALLOWED_STATES:
-            _ensure_quarter_on(self)
+            ensure_quarter_on(self)
             compute_sales_quarterly(self)
             self._compute_ba_lines()
             self._retotal()
 
     # ---------- helpers ---------- #
 
+    def _should_post_accrual_from_workflow(self):
+        if self.docstatus != 1 or self.status != "Posted" or self.accrual_je:
+            return False
+
+        previous = self.get_doc_before_save()
+        if not previous:
+            return False
+
+        return previous.status == "Approved"
+
     def _compute_ba_lines(self):
         """Fill BA lines using BA engine results; also fill BA quarter targets for visibility."""
-        q_start, q_end, months3 = get_quarter_window(self.fiscal_year, _ensure_quarter_on(self))
-        ba_map = compute_ba_for_sheet(self)  # {sales_person: commission_value}
+        q_start, q_end, months3 = get_quarter_window(
+            self.fiscal_year, ensure_quarter_on(self),
+        )
+        ba_map, ba_actual_map = compute_ba_for_sheet(self, include_actuals=True)
 
         for ln in (self.get("commission_lines") or []):
             if ln.department != "Business Accounts":
                 continue
-            # Quarter target from distribution (BA)
-            ln.target_value = quarter_target_from_distribution(ln.sales_person, self.fiscal_year, months3)
-            # Commission (computed by BA engine)
+            ln.target_value = quarter_target_from_distribution(
+                ln.sales_person, self.fiscal_year, months3,
+            )
+            ln.actual_sales = flt(ba_actual_map.get(ln.sales_person) or 0.0)
+            ln.achievement_pct = (
+                round((ln.actual_sales / ln.target_value * 100.0), 2)
+                if ln.target_value
+                else 0.0
+            )
             ln.commission_value = flt(ba_map.get(ln.sales_person) or 0.0)
+            ln.commission_rate = (
+                round((ln.commission_value / ln.actual_sales * 100.0), 2)
+                if ln.actual_sales
+                else 0.0
+            )
 
     def _retotal(self):
         total_target = total_actual = total_commission = 0.0

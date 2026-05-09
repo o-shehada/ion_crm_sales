@@ -1,35 +1,13 @@
-
 # -*- coding: utf-8 -*-
+"""
+Document-event hooks that auto-recalculate commission sheets when
+Sales Invoices or Payment Entries are submitted/updated.
+"""
+
 import frappe
-from frappe.utils import getdate  # normalize dates safely
+from frappe.utils import getdate
 
-
-def _quarter_of_date(d, fy_name):
-    """Return 'Q1'..'Q4' for date d within Fiscal Year fy_name."""
-    d = getdate(d)
-
-    fy = frappe.get_doc("Fiscal Year", fy_name)
-    ysd = fy.year_start_date
-
-    from datetime import timedelta
-    def addm(dt, months):
-        from calendar import monthrange
-        y = dt.year + (dt.month - 1 + months) // 12
-        m = (dt.month - 1 + months) % 12 + 1
-        day = min(dt.day, monthrange(y, m)[1])
-        from datetime import date
-        return date(y, m, day)
-
-    bounds = [
-        (ysd,                 addm(ysd, 3) - timedelta(days=1), "Q1"),
-        (addm(ysd, 3),        addm(ysd, 6) - timedelta(days=1), "Q2"),
-        (addm(ysd, 6),        addm(ysd, 9) - timedelta(days=1), "Q3"),
-        (addm(ysd, 9),        addm(ysd,12) - timedelta(days=1), "Q4"),
-    ]
-    for start, end, label in bounds:
-        if start <= d <= end:
-            return label
-    return "Q1"
+from .helpers import quarter_of_date
 
 
 def _touch_related_sheets(doc, method=None):
@@ -50,18 +28,21 @@ def _touch_related_sheets(doc, method=None):
     fy = frappe.db.get_value(
         "Fiscal Year",
         {"year_start_date": ("<=", posting_date), "year_end_date": (">=", posting_date)},
-        "name"
+        "name",
     )
     if not fy:
         return
 
-    quarter = _quarter_of_date(posting_date, fy)
+    quarter = quarter_of_date(posting_date, fy)
 
-    # Only fetch existing, standard fields
     sheets = frappe.get_all(
         "Sales Target and Commission Sheet",
-        filters={"company": company, "fiscal_year": fy, "status": ["in", ["Draft", "Submitted", "Approved"]]},
-        fields=["name", "quarter"]   # <-- removed custom_quarter to avoid SELECT errors
+        filters={
+            "company": company,
+            "fiscal_year": fy,
+            "status": ["in", ["Draft", "Submitted", "Approved"]],
+        },
+        fields=["name", "quarter"],
     )
 
     for s in sheets:
@@ -72,5 +53,5 @@ def _touch_related_sheets(doc, method=None):
         except Exception:
             frappe.log_error(
                 f"ion_crm_sales: failed to auto-recalculate sheet {s['name']}",
-                "Commission Trigger"
+                "Commission Trigger",
             )
