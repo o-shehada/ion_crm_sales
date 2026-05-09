@@ -914,6 +914,14 @@
  {
   "docstatus": 0,
   "doctype": "Role Profile",
+  "modified": "2026-05-09 10:56:58.928342",
+  "name": "SM",
+  "role_profile": "SM",
+  "roles": []
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
   "modified": "2026-02-04 23:31:31.384496",
   "name": "Material Request",
   "role_profile": "Material Request",
