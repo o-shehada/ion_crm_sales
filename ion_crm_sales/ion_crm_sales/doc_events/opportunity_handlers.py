@@ -6,6 +6,7 @@ QUOTATION_LINK_FIELDS = {
     "Opportunity SM": (("opportunity_sm", "custom_opportunity_sm"), "S&M"),
     "Opportunity Hotels": (("opportunity_hotels", "custom_opportunity_hotels"), "Hotels"),
     "Opportunity Tenders": (("opportunity_tenders", "custom_opportunity_tenders"), "Tenders"),
+    "Opportunity ISP": (("opportunity_isp", "custom_opportunity_isp"), "ISP"),
 }
 
 
@@ -14,6 +15,7 @@ QUOTATION_MAPPERS = {
     "Opportunity SM": "ion_crm_sales.ion_crm_sales.doctype.opportunity_sm.opportunity_sm.make_quotation",
     "Opportunity Hotels": "ion_crm_sales.ion_crm_sales.doctype.opportunity_hotels.opportunity_hotels.make_quotation",
     "Opportunity Tenders": "ion_crm_sales.ion_crm_sales.doctype.opportunity_tenders.opportunity_tenders.make_quotation",
+    "Opportunity ISP": "ion_crm_sales.ion_crm_sales.doctype.opportunity_isp.opportunity_isp.make_quotation",
 }
 
 

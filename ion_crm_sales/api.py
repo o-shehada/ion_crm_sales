@@ -2,8 +2,98 @@ import frappe
 from ion_crm_sales.ion_crm_sales import doctype
 from ion_crm_sales.technical_survey import load_template_fields
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+from frappe.model.mapper import get_mapped_doc
 
 from frappe.utils import nowdate, add_days, get_link_to_form, date_diff, today
+
+
+@frappe.whitelist()
+def make_sales_order_from_delivery_note(source_name, target_doc=None):
+    def set_missing_values(source, target):
+        target.transaction_date = nowdate()
+        target.delivery_date = source.get("posting_date") or nowdate()
+        target.status = "Draft"
+
+        target.run_method("set_missing_values")
+        target.run_method("calculate_taxes_and_totals")
+
+    def update_item(source, target, source_parent):
+        target.delivery_date = source_parent.get("posting_date") or nowdate()
+        target.delivered_qty = 0
+        target.billed_amt = 0
+        target.produced_qty = 0
+        target.returned_qty = 0
+        target.ordered_qty = 0
+        target.planned_qty = 0
+        target.work_order_qty = 0
+        target.prevdoc_docname = None
+        target.prevdoc_doctype = None
+        target.prevdoc_detail_docname = None
+
+    doclist = get_mapped_doc(
+        "Delivery Note",
+        source_name,
+        {
+            "Delivery Note": {
+                "doctype": "Sales Order",
+                "validation": {"docstatus": ["=", 1]},
+                "field_no_map": [
+                    "amended_from",
+                    "against_sales_invoice",
+                    "billing_status",
+                    "delivery_status",
+                    "inter_company_reference",
+                    "is_return",
+                    "naming_series",
+                    "per_billed",
+                    "per_delivered",
+                    "per_installed",
+                    "posting_date",
+                    "posting_time",
+                    "return_against",
+                    "status",
+                    "title",
+                ],
+            },
+            "Delivery Note Item": {
+                "doctype": "Sales Order Item",
+                "field_no_map": [
+                    "against_sales_invoice",
+                    "against_sales_order",
+                    "billed_amt",
+                    "delivered_qty",
+                    "dn_detail",
+                    "packed_qty",
+                    "picked_qty",
+                    "prevdoc_detail_docname",
+                    "prevdoc_docname",
+                    "prevdoc_doctype",
+                    "returned_qty",
+                    "serial_and_batch_bundle",
+                    "serial_no",
+                    "so_detail",
+                    "target_warehouse",
+                    "use_serial_batch_fields",
+                ],
+                "postprocess": update_item,
+            },
+            "Sales Taxes and Charges": {
+                "doctype": "Sales Taxes and Charges",
+                "reset_value": True,
+            },
+            "Sales Team": {
+                "doctype": "Sales Team",
+                "add_if_empty": True,
+            },
+            "Payment Schedule": {
+                "doctype": "Payment Schedule",
+            },
+        },
+        target_doc,
+        set_missing_values,
+    )
+
+    return doclist
 
 @frappe.whitelist()
 def renew_subscription(subscription_name: str, renewal_window_days: int = 30):

@@ -1,0 +1,166 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-23 09:50:01.506144",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_person",
+  "employee",
+  "department",
+  "service_category",
+  "commission_component",
+  "transaction_type",
+  "basis_amount",
+  "target_value",
+  "cumulative_before",
+  "column_break_ibtl",
+  "cumulative_after",
+  "above_target_amount",
+  "rate",
+  "split_percentage",
+  "split_count",
+  "penalty_factor",
+  "commission_amount",
+  "ion_role",
+  "section_break_wqnz",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales Person",
+   "options": "Sales Person"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Department",
+   "options": "\nSales\nBusiness Accounts"
+  },
+  {
+   "fieldname": "service_category",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Service Category"
+  },
+  {
+   "fieldname": "commission_component",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Commission Component",
+   "options": "\nBase\nAbove Target\nFirst Year Addon\nAcquisition Bonus\nPenalty\nReversal"
+  },
+  {
+   "fieldname": "transaction_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Transaction Type",
+   "options": "\nNewLead\nUpsell\nOld\nRenewal"
+  },
+  {
+   "fieldname": "basis_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Basis Amount"
+  },
+  {
+   "fieldname": "target_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Target Value"
+  },
+  {
+   "fieldname": "cumulative_before",
+   "fieldtype": "Currency",
+   "label": "Cumulative Before"
+  },
+  {
+   "fieldname": "column_break_ibtl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cumulative_after",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cumulative After"
+  },
+  {
+   "fieldname": "above_target_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Above Target Amount"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Rate"
+  },
+  {
+   "fieldname": "split_percentage",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Split Percentage"
+  },
+  {
+   "fieldname": "split_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Split Count"
+  },
+  {
+   "fieldname": "penalty_factor",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Penalty Factor"
+  },
+  {
+   "fieldname": "commission_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Commission Amount"
+  },
+  {
+   "fieldname": "ion_role",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "ION Role"
+  },
+  {
+   "fieldname": "section_break_wqnz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Remarks"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-23 10:03:52.776416",
+ "modified_by": "Administrator",
+ "module": "Ion Crm Sales",
+ "name": "Commission Transaction Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

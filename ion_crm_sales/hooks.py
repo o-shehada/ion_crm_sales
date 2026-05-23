@@ -36,6 +36,12 @@ doc_events = {
             "ion_crm_sales.ion_crm_sales.doc_events.survey_notifications.on_before_save",
         ]
     },
+    "Opportunity ISP": {
+        "before_save": [
+            "ion_crm_sales.ion_crm_sales.doc_events.opportunity_handlers.before_save",
+            "ion_crm_sales.ion_crm_sales.doc_events.survey_notifications.on_before_save",
+        ]
+    },
     "Opportunity Tenders": {
         "before_save": [
             "ion_crm_sales.ion_crm_sales.doc_events.opportunity_handlers.before_save",
@@ -50,12 +56,24 @@ doc_events = {
         "after_insert": "ion_crm_sales.ion_crm_sales.doc_events.distributor_handlers.create_sales_partner_for_distributor",
     },
     "Sales Invoice": {
+        "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_invoice_handlers.validate_contract_for_source_sales_orders",
         "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
         "on_cancel": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
         "on_update_after_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
     },
+    "Sales Order": {
+        "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_insert",
+        "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.validate",
+    },
     "Payment Entry": {
         "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
+    },
+    "Supplier Quotation": {
+        "on_update": "ion_crm_sales.ion_crm_sales.doc_events.supplier_quotation_handlers.on_update",
+    },
+    "Quotation": {
+        "validate": "ion_crm_sales.ion_crm_sales.doc_events.quotation_handlers.validate",
+        "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.quotation_handlers.before_insert",
     },
     "Issue": {
         "after_insert": "ion_crm_sales.ion_support.support.notifications.new_issue_notification",
@@ -154,10 +172,27 @@ doctype_js = {
     "Opportunity SM": "public/js/opportunity_survey.js",
     "Opportunity Hotels": "public/js/opportunity_survey.js",
     "Opportunity Tenders": "public/js/opportunity_survey.js",
+    "Opportunity ISP": "public/js/opportunity_survey.js",
+    "Material Request": "public/js/material_request.js",
+    "Delivery Note": "public/js/delivery_note.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+
+override_whitelisted_methods = {
+    "erpnext.crm.doctype.opportunity.opportunity.make_quotation": "ion_crm_sales.opportunity.make_quotation",
+    "erpnext.crm.doctype.opportunity.opportunity.make_request_for_quotation": "ion_crm_sales.opportunity.make_request_for_quotation",
+    "erpnext.crm.doctype.opportunity.opportunity.make_supplier_quotation": "ion_crm_sales.opportunity.make_supplier_quotation",
+    "erpnext.selling.doctype.quotation.quotation.make_sales_order": "ion_crm_sales.quotation.make_sales_order",
+    "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice": "ion_crm_sales.sales_order.make_sales_invoice",
+    "erpnext.buying.doctype.request_for_quotation.request_for_quotation.make_supplier_quotation_from_rfq": "ion_crm_sales.request_for_quotation.make_supplier_quotation_from_rfq",
+    "erpnext.buying.doctype.request_for_quotation.request_for_quotation.create_supplier_quotation": "ion_crm_sales.request_for_quotation.create_supplier_quotation",
+}
+
+override_doctype_dashboards = {
+    "Quotation": "ion_crm_sales.quotation_dashboard.get_dashboard_data",
+}
 
 # Svg Icons
 # ------------------

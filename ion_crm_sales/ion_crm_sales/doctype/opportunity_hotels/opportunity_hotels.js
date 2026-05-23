@@ -9,27 +9,134 @@ erpnext.sales_common.setup_selling_controller();
 
 
 frappe.ui.form.on("Opportunity Hotels", {
+    onload: function (frm) {
+        frm.trigger("setup_queries");
+    },
+
+    party_name: function (frm) {
+        if (frm.doc.opportunity_from !== "Customer") {
+            return;
+        }
+
+        frappe.call({
+            method: "frappe.client.get_value",
+            args: {
+                doctype: "Customer",
+                filters: {
+                    name: frm.doc.party_name,
+                },
+                fieldname: ["custom_nationality"],
+            },
+            callback: function (r) {
+                if (r.message && r.message.custom_nationality) {
+                    frappe.model.set_value(
+                        "Opportunity Hotels",
+                        frm.doc.name,
+                        "custom_nationality",
+                        r.message.custom_nationality
+                    );
+                }
+            },
+        });
+    },
+
+    custom_warehouse: function (frm) {
+        frm.doc.items.forEach(function (item) {
+            if (item.item_code) {
+                frappe.call({
+                    method: "frappe.client.get_value",
+                    args: {
+                        doctype: "Bin",
+                        filters: {
+                            item_code: item.item_code,
+                            warehouse: frm.doc.custom_warehouse,
+                        },
+                        fieldname: ["valuation_rate", "actual_qty"],
+                    },
+                    callback: function (r) {
+                        if (r.message && r.message.valuation_rate) {
+                            let valuation_rate = flt(r.message.valuation_rate);
+                            frappe.model.set_value(
+                                item.doctype,
+                                item.name,
+                                "custom_valuation_rate",
+                                valuation_rate
+                            );
+                            frappe.model.set_value(
+                                item.doctype,
+                                item.name,
+                                "custom_valuation_rate_company_currency",
+                                flt(frm.doc.conversion_rate) * valuation_rate
+                            );
+                            frappe.model.set_value(
+                                item.doctype,
+                                item.name,
+                                "custom_availability",
+                                r.message.actual_qty >= item.qty ? "Available" : "Unavailable"
+                            );
+                        } else {
+                            frappe.model.set_value(item.doctype, item.name, "custom_availability", "Unavailable");
+                            frappe.show_alert("Valuation rate not found for " + item.item_code, "orange");
+                        }
+                    },
+                });
+            }
+        });
+    },
+
+    opportunity_from: function (frm) {
+        switch (frm.doc.opportunity_from) {
+            case "Customer":
+                frm.set_value("sales_stage", "Opportunity");
+                break;
+            case "Prospect":
+                frm.set_value("sales_stage", "Prospecting");
+                break;
+        }
+    },
+
+    custom_material_type: function (frm) {
+        frappe.model.clear_table(frm.doc, "items");
+        frm.refresh_field("items");
+        frm.trigger("setup_queries");
+    },
+
+    setup_queries: function (frm) {
+        frm.set_query("item_code", "items", function () {
+            let filters = { is_sales_item: 1 };
+            if (frm.doc.custom_material_type) {
+                filters.custom_material_type = frm.doc.custom_material_type;
+            }
+
+            return {
+                query: "erpnext.controllers.queries.item_query",
+                filters: filters,
+            };
+        });
+    },
+
     refresh: function (frm) {
         var doc = frm.doc;
+        frm.trigger("setup_queries");
 
         if (!frm.is_new() && doc.status !== "Lost") {
-            // if (doc.items) {
-            //     frm.add_custom_button(
-            //         __("Supplier Quotation"),
-            //         function () {
-            //             frm.trigger("make_supplier_quotation");
-            //         },
-            //         __("Create")
-            //     );
+            if (doc.items) {
+                frm.add_custom_button(
+                    __("Supplier Quotation"),
+                    function () {
+                        frm.trigger("make_supplier_quotation");
+                    },
+                    __("Create")
+                );
 
-            //     frm.add_custom_button(
-            //         __("Request For Quotation"),
-            //         function () {
-            //             frm.trigger("make_request_for_quotation");
-            //         },
-            //         __("Create")
-            //     );
-            // }
+                frm.add_custom_button(
+                    __("Request For Quotation"),
+                    function () {
+                        frm.trigger("make_request_for_quotation");
+                    },
+                    __("Create")
+                );
+            }
 
 			if (frm.doc.opportunity_from == "Customer"){
 				frm.add_custom_button(
@@ -59,6 +166,14 @@ frappe.ui.form.on("Opportunity Hotels", {
                 __("Create")
             );
 
+            frm.add_custom_button(
+                __("Material Request"),
+                function () {
+                    frm.trigger("create_material_request");
+                },
+                __("Create")
+            );
+
             let company_currency = erpnext.get_currency(frm.doc.company);
             if (company_currency != frm.doc.currency) {
                 frm.add_custom_button(__("Fetch Latest Exchange Rate"), function () {
@@ -73,6 +188,56 @@ frappe.ui.form.on("Opportunity Hotels", {
 		} else {
 			frappe.contacts.clear_address_and_contact(frm);
 		}
+
+        if (frm.doc.opportunity_type === "Sales") {
+            frm.set_value("opportunity_type", "Dedicated");
+        }
+
+        if (!frm.doc.custom_request) {
+            frm.set_df_property("custom_requirements", "read_only", 1);
+        }
+
+        if (["Requirements Gathering"].includes(frm.doc.workflow_state)) {
+            frm.$wrapper.find("[data-fieldname='custom_scope']").hide();
+        } else {
+            frm.$wrapper.find("[data-fieldname='custom_scope']").show();
+        }
+
+        if (["Requirements Gathering", "Scoping"].includes(frm.doc.workflow_state)) {
+            frm.$wrapper.find("[data-fieldname='custom_qa']").hide();
+        } else {
+            frm.$wrapper.find("[data-fieldname='custom_qa']").show();
+        }
+
+        if (
+            ["Requirements Gathering", "Scoping", "Qualifying"].includes(frm.doc.workflow_state) ||
+            frm.doc.workflow_state === "Rejected"
+        ) {
+            frm.$wrapper.find("[data-fieldname='custom_survey']").hide();
+        } else {
+            frm.$wrapper.find("[data-fieldname='custom_survey']").show();
+        }
+
+    },
+
+    validate: function (frm) {
+        if (frm.doc.custom_request) {
+            frm.set_df_property("custom_requirements", "read_only", 0);
+        }
+
+        if (
+            frm.doc.custom_requirements &&
+            frm.doc.workflow_state !== "Scoping" &&
+            frm.doc.workflow_state === "Requirements Gathering"
+        ) {
+            frm.set_value("workflow_state", "Scoping");
+            frm.refresh();
+        }
+
+        if (frm.doc.custom_scope_description && frm.doc.custom_deliverables && frm.doc.workflow_state === "Scoping") {
+            frm.set_value("workflow_state", "Qualifying");
+            frm.refresh();
+        }
     },
 
     make_supplier_quotation: function (frm) {
@@ -111,6 +276,13 @@ frappe.ui.form.on("Opportunity Hotels", {
 				issue_from_dt: "Opportunity Hotels"
 			}
 		})
+	},
+
+	create_material_request() {
+		frappe.model.open_mapped_doc({
+			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_hotels.opportunity_hotels.make_material_request",
+			frm: cur_frm,
+		});
 	},
 
     onload_post_render: function (frm) {
@@ -153,6 +325,88 @@ frappe.ui.form.on("Opportunity Item", {
         frappe.model.set_value(cdt, cdn, "base_rate", flt(frm.doc.conversion_rate) * flt(row.rate));
         frappe.model.set_value(cdt, cdn, "base_amount", flt(frm.doc.conversion_rate) * flt(row.amount));
         frm.trigger("calculate_total");
+
+        if (row.item_code && frm.doc.custom_warehouse) {
+            frappe.call({
+                method: "frappe.client.get_value",
+                args: {
+                    doctype: "Bin",
+                    filters: {
+                        item_code: row.item_code,
+                        warehouse: frm.doc.custom_warehouse,
+                    },
+                    fieldname: ["valuation_rate", "actual_qty"],
+                },
+                callback: function (r) {
+                    if (r.message && r.message.valuation_rate) {
+                        let valuation_rate = flt(r.message.valuation_rate);
+                        frappe.model.set_value(cdt, cdn, "custom_valuation_rate", valuation_rate);
+                        frappe.model.set_value(
+                            cdt,
+                            cdn,
+                            "custom_valuation_rate_company_currency",
+                            flt(frm.doc.conversion_rate) * valuation_rate
+                        );
+                        frappe.model.set_value(
+                            cdt,
+                            cdn,
+                            "custom_availability",
+                            r.message.actual_qty >= row.qty ? "Available" : "Unavailable"
+                        );
+                    } else {
+                        frappe.model.set_value(cdt, cdn, "custom_valuation_rate", flt(0));
+                        frappe.model.set_value(cdt, cdn, "custom_valuation_rate_company_currency", flt(0));
+                        frappe.model.set_value(cdt, cdn, "custom_availability", "Unavailable");
+                        console.log(
+                            "Valuation rate not found for item: " +
+                                row.item_code +
+                                " in warehouse: " +
+                                frm.doc.custom_warehouse
+                        );
+                    }
+                },
+            });
+        }
+    },
+    item_code: function (frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        if (!row.item_code) {
+            return;
+        }
+
+        frappe.call({
+            method: "erpnext.crm.doctype.opportunity.opportunity.get_item_details",
+            args: {
+                item_code: row.item_code,
+            },
+            callback: function (r) {
+                if (r.message) {
+                    $.each(r.message, function (key, value) {
+                        frappe.model.set_value(cdt, cdn, key, value);
+                    });
+                    refresh_field("image_view", row.name, "items");
+                }
+
+                if (frm.doc.custom_price_list) {
+                    frappe.call({
+                        method: "frappe.client.get_value",
+                        args: {
+                            doctype: "Item Price",
+                            filters: {
+                                item_code: row.item_code,
+                                price_list: frm.doc.custom_price_list,
+                            },
+                            fieldname: "price_list_rate",
+                        },
+                        callback: function (response) {
+                            if (response && response.message) {
+                                frappe.model.set_value(cdt, cdn, "rate", response.message.price_list_rate);
+                            }
+                        },
+                    });
+                }
+            },
+        });
     },
     qty: function (frm, cdt, cdn) {
         frm.trigger("calculate", cdt, cdn);

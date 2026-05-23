@@ -6,17 +6,23 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "commission_lines",
   "section_break_tbau",
   "company",
   "fiscal_year",
   "quarter",
   "status",
-  "commission_lines",
   "total_target",
   "total_actual_sales",
   "total_commission",
+  "column_break_dnnb",
   "accrual_posted_amount",
   "accrual_je",
+  "last_transaction_sync_on",
+  "transaction_sync_status",
+  "commission_transaction_count",
+  "source_of_totals",
+  "section_break_dxlr",
   "remarks",
   "amended_from"
  ],
@@ -118,13 +124,43 @@
    "label": "Quarter",
    "options": "Q1\nQ2\nQ3\nQ4",
    "reqd": 1
+  },
+  {
+   "fieldname": "column_break_dnnb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_transaction_sync_on",
+   "fieldtype": "Datetime",
+   "label": "Last Transaction Sync On"
+  },
+  {
+   "fieldname": "transaction_sync_status",
+   "fieldtype": "Select",
+   "label": "Transaction Sync Status",
+   "options": "\nNot Synced\nSynced\nNeeds Rebuild"
+  },
+  {
+   "fieldname": "commission_transaction_count",
+   "fieldtype": "Int",
+   "label": "Commission Transaction Count"
+  },
+  {
+   "fieldname": "source_of_totals",
+   "fieldtype": "Select",
+   "label": "Source of Totals",
+   "options": "\nComputed Live\nCommission Transactions"
+  },
+  {
+   "fieldname": "section_break_dxlr",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-01-25 14:25:15.629491",
+ "modified": "2026-05-23 10:02:11.845549",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Sales Target and Commission Sheet",

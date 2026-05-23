@@ -4,8 +4,7 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
- "creation": "2025-08-10 18:58:19.483837",
- "default_view": "List",
+ "creation": "2026-05-12 23:49:48.168338",
  "description": "Potential Sales Deal",
  "doctype": "DocType",
  "document_type": "Document",
@@ -22,19 +21,21 @@
   "opportunity_type",
   "source",
   "opportunity_owner",
-  "custom_project_scale",
+  "custom_year",
+  "custom_customer_english_name_prtg",
+  "custom_english_name",
   "column_break_10",
   "sales_stage",
   "expected_closing",
   "probability",
-  "custom_section_break_f3oly",
+  "custom_section_break_u9qdh",
   "custom_surveyor_manager",
   "custom_account_manager",
-  "custom_sales_engineer",
   "custom_finance",
+  "custom_column_break_wdwqg",
+  "custom_sales_engineer",
   "custom_pro",
-  "custom_column_break_mmmnj",
-  "custom_section_break_x3aiu",
+  "custom_section_break_3vjkf",
   "custom_request",
   "custom_requirements",
   "organization_details_section",
@@ -58,6 +59,11 @@
   "column_break_17",
   "opportunity_amount",
   "base_opportunity_amount",
+  "custom_section_break_kncma",
+  "custom_contract_starting_date",
+  "custom_working_dayshours",
+  "custom_column_break_y5wig",
+  "custom_contract_end_date",
   "more_info",
   "company",
   "campaign",
@@ -113,13 +119,29 @@
   "custom_qa_report",
   "custom_survey",
   "custom_section_break_ikapp",
-  "column_break_nzsb",
-  "custom_column_break_tujep",
+  "column_break_aqzc",
   "custom_survey_attachment",
   "custom_section_break_nixpu",
   "custom_surveyors",
   "custom_technical",
   "custom_technical_survey_template_table",
+  "technical_data_tab",
+  "custom_service_active",
+  "custom_speed__mbps",
+  "column_break_xwwq",
+  "custom_vlan",
+  "custom_public_ip",
+  "custom_section_break_l8lcr",
+  "custom_main_site",
+  "custom_mngmt_ip__ap",
+  "custom_mngmt_ip__sm",
+  "custom_column_break_lhvyg",
+  "custom_link_equipment_typemodel__fiber",
+  "custom_link_p2p__p2mp_ptosector",
+  "custom_ssid__password_",
+  "custom_column_break_12u3j",
+  "custom_username",
+  "custom_password_",
   "supplier_quotations_tab",
   "opportunity_supplier_quotation_table",
   "dashboard_tab",
@@ -194,7 +216,7 @@
    "width": "50%"
   },
   {
-   "default": "Sales",
+   "default": "ISP",
    "fieldname": "opportunity_type",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -218,12 +240,21 @@
    "options": "User"
   },
   {
-   "default": "Small",
-   "fieldname": "custom_project_scale",
-   "fieldtype": "Select",
-   "label": "Project Scale",
-   "options": "Small\nMedium",
-   "reqd": 1,
+   "fieldname": "custom_year",
+   "fieldtype": "Data",
+   "label": "Year",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_customer_english_name_prtg",
+   "fieldtype": "Data",
+   "label": "Customer English Name (PRTG)",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_english_name",
+   "fieldtype": "Data",
+   "label": "English Name",
    "translatable": 1
   },
   {
@@ -250,7 +281,7 @@
    "label": "Probability (%)"
   },
   {
-   "fieldname": "custom_section_break_f3oly",
+   "fieldname": "custom_section_break_u9qdh",
    "fieldtype": "Section Break"
   },
   {
@@ -269,17 +300,21 @@
    "options": "User"
   },
   {
-   "fieldname": "custom_sales_engineer",
-   "fieldtype": "Link",
-   "label": "Sales Engineer",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"SE\"]]",
-   "options": "User"
-  },
-  {
    "fieldname": "custom_finance",
    "fieldtype": "Link",
    "label": "Finance",
    "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"Finance\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_column_break_wdwqg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_sales_engineer",
+   "fieldtype": "Link",
+   "label": "Sales Engineer",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"SE\"]]",
    "options": "User"
   },
   {
@@ -290,22 +325,20 @@
    "options": "User"
   },
   {
-   "fieldname": "custom_column_break_mmmnj",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "custom_section_break_x3aiu",
+   "fieldname": "custom_section_break_3vjkf",
    "fieldtype": "Section Break"
   },
   {
    "fieldname": "custom_request",
    "fieldtype": "Long Text",
-   "label": "Request"
+   "label": "Request",
+   "reqd": 1
   },
   {
    "fieldname": "custom_requirements",
-   "fieldtype": "Long Text",
-   "label": "Requirements"
+   "fieldtype": "Text Editor",
+   "label": "Requirements",
+   "translatable": 1
   },
   {
    "fieldname": "organization_details_section",
@@ -426,6 +459,31 @@
    "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "custom_section_break_kncma",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_contract_starting_date",
+   "fieldtype": "Date",
+   "label": "Contract Starting Date"
+  },
+  {
+   "fieldname": "custom_working_dayshours",
+   "fieldtype": "Data",
+   "label": "Working Days\\Hours",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_column_break_y5wig",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_contract_end_date",
+   "fieldtype": "Data",
+   "label": "Contract End Date",
+   "translatable": 1
   },
   {
    "collapsible": 1,
@@ -659,7 +717,7 @@
    "options": "Opportunity Item"
   },
   {
-   "default": "S&M",
+   "default": "Hotels",
    "fieldname": "custom_price_list",
    "fieldtype": "Link",
    "hidden": 1,
@@ -780,7 +838,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "custom_column_break_tujep",
+   "fieldname": "column_break_aqzc",
    "fieldtype": "Column Break"
   },
   {
@@ -808,6 +866,97 @@
    "fieldtype": "Table",
    "label": "Technical Survey Template Table",
    "options": "Technical Survey Template Table"
+  },
+  {
+   "fieldname": "technical_data_tab",
+   "fieldtype": "Tab Break",
+   "label": "Technical Data"
+  },
+  {
+   "default": "0",
+   "fieldname": "custom_service_active",
+   "fieldtype": "Check",
+   "label": "Service Active?"
+  },
+  {
+   "fieldname": "custom_speed__mbps",
+   "fieldtype": "Data",
+   "label": "Speed / Mbps",
+   "translatable": 1
+  },
+  {
+   "fieldname": "column_break_xwwq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_vlan",
+   "fieldtype": "Data",
+   "label": "VLAN",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_public_ip",
+   "fieldtype": "Data",
+   "label": "Public IP",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_section_break_l8lcr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_main_site",
+   "fieldtype": "Data",
+   "label": "Main Site",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_mngmt_ip__ap",
+   "fieldtype": "Data",
+   "label": "Mngmt IP - AP",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_mngmt_ip__sm",
+   "fieldtype": "Data",
+   "label": "Mngmt IP - SM",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_column_break_lhvyg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_link_equipment_typemodel__fiber",
+   "fieldtype": "Data",
+   "label": "Link (Equipment) Type\\Model \\ Fiber",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_link_p2p__p2mp_ptosector",
+   "fieldtype": "Data",
+   "label": "Link P2P \\ P2MP (P-To-Sector)",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_ssid__password_",
+   "fieldtype": "Password",
+   "label": "SSID - Password "
+  },
+  {
+   "fieldname": "custom_column_break_12u3j",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_username",
+   "fieldtype": "Data",
+   "label": "Username",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_password_",
+   "fieldtype": "Password",
+   "label": "Password "
   },
   {
    "depends_on": "eval:!doc.__islocal",
@@ -839,13 +988,10 @@
    "options": "Workflow State"
   },
   {
-   "fieldname": "column_break_nzsb",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "supplier_quotations_tab",
    "fieldtype": "Tab Break",
-   "label": "Supplier Quotations"
+   "label": "Supplier Quotations",
+   "read_only": 1
   },
   {
    "fieldname": "opportunity_supplier_quotation_table",
@@ -859,13 +1005,24 @@
  "grid_page_length": 50,
  "icon": "fa fa-info-sign",
  "links": [],
- "modified": "2026-05-13 03:16:20.440017",
+ "modified": "2026-05-13 01:37:40.358728",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
- "name": "Opportunity SM",
+ "name": "Opportunity ISP",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "ISP Sales",
+   "share": 1,
+   "write": 1
+  },
   {
    "create": 1,
    "delete": 1,
@@ -876,19 +1033,6 @@
    "read": 1,
    "report": 1,
    "role": "Sales Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "S&M Sales",
-   "select": 1,
    "share": 1,
    "write": 1
   }
@@ -903,6 +1047,7 @@
  "subject_field": "title",
  "timeline_field": "party_name",
  "title_field": "title",
+ "track_changes": 1,
  "track_seen": 1,
  "track_views": 1
 }

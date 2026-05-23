@@ -19,6 +19,7 @@
    "default": "7",
    "fieldname": "rate_above_140",
    "fieldtype": "Percent",
+   "hidden": 1,
    "label": "Rate Above 140%"
   },
   {
@@ -41,6 +42,7 @@
    "default": "1",
    "fieldname": "count_paid_only",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Count Paid Only"
   },
   {
@@ -64,6 +66,7 @@
   {
    "fieldname": "exclude_item_groups",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Exclude Item Groups"
   }
  ],
@@ -71,7 +74,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-01-24 18:22:11.182783",
+ "modified": "2026-05-09 17:56:38.586836",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Commission Policy Settings",

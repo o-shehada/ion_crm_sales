@@ -91,16 +91,37 @@
   "notes_html",
   "notes",
   "custom_survey",
-  "custom_surveyor_manager",
-  "custom_section_break_nixpu",
-  "custom_surveyors",
   "custom_section_break_ikapp",
-  "custom_survey_template",
+  "column_break_xkht",
   "custom_column_break_tujep",
   "custom_survey_attachment",
+  "custom_section_break_nixpu",
+  "custom_surveyors",
   "custom_technical",
   "custom_technical_survey_template_table",
-  "dashboard_tab"
+  "supplier_quotations_tab",
+  "opportunity_supplier_quotation_table",
+  "dashboard_tab",
+  "custom_logs",
+  "custom_audit_log",
+  "workflow_state",
+  "custom_section_break_itrgi",
+  "custom_rfp_document",
+  "custom_column_break_trmnr",
+  "custom_account_manager",
+  "custom_sales_engineer",
+  "custom_finance",
+  "custom_pro",
+  "custom_nationality",
+  "custom_scope",
+  "custom_scope_description",
+  "custom_deliverables",
+  "custom_out_of_scope",
+  "custom_section_break_h8otc",
+  "custom_cxo_team",
+  "custom_cxo_team_leader",
+  "custom_price_list",
+  "custom_warehouse"
  ],
  "fields": [
   {
@@ -630,30 +651,8 @@
    "label": "Survey"
   },
   {
-   "fieldname": "custom_surveyor_manager",
-   "fieldtype": "Link",
-   "label": "Surveyor Manager",
-   "options": "User"
-  },
-  {
-   "fieldname": "custom_section_break_nixpu",
-   "fieldtype": "Section Break",
-   "label": "Surveyors"
-  },
-  {
-   "fieldname": "custom_surveyors",
-   "fieldtype": "Table",
-   "label": "Surveyors",
-   "options": "Technical Surveyor"
-  },
-  {
    "fieldname": "custom_section_break_ikapp",
    "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "custom_survey_template",
-   "fieldtype": "Data",
-   "label": "Survey Template"
   },
   {
    "fieldname": "custom_column_break_tujep",
@@ -663,6 +662,16 @@
    "fieldname": "custom_survey_attachment",
    "fieldtype": "Attach",
    "label": "Survey Attachment"
+  },
+  {
+   "fieldname": "custom_section_break_nixpu",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_surveyors",
+   "fieldtype": "Table",
+   "label": "Surveyors",
+   "options": "Technical Surveyor"
   },
   {
    "fieldname": "custom_technical",
@@ -681,12 +690,154 @@
    "fieldtype": "Tab Break",
    "label": "Connections",
    "show_dashboard": 1
+  },
+  {
+   "fieldname": "custom_logs",
+   "fieldtype": "Tab Break",
+   "ignore_user_permissions": 1,
+   "label": "Logs"
+  },
+  {
+   "fieldname": "custom_audit_log",
+   "fieldtype": "Table",
+   "label": "Audit Log",
+   "options": "Opportunity Log",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Workflow State",
+   "no_copy": 1,
+   "options": "Workflow State"
+  },
+  {
+   "fieldname": "custom_section_break_itrgi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_rfp_document",
+   "fieldtype": "Attach",
+   "label": "RFP Document",
+   "reqd": 1
+  },
+  {
+   "fieldname": "custom_column_break_trmnr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_account_manager",
+   "fieldtype": "Link",
+   "label": "Account Manager",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"AM\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_sales_engineer",
+   "fieldtype": "Link",
+   "label": "Sales Engineer",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"SE\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_finance",
+   "fieldtype": "Link",
+   "label": "Finance",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"Finance\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_pro",
+   "fieldtype": "Link",
+   "label": "PRO",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"PRO\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_nationality",
+   "fieldtype": "Link",
+   "label": "Nationality",
+   "options": "Country"
+  },
+  {
+   "fieldname": "custom_scope",
+   "fieldtype": "Tab Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "custom_scope_description",
+   "fieldtype": "Text Editor",
+   "label": "Scope Description",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_deliverables",
+   "fieldtype": "Table",
+   "label": "Deliverables",
+   "options": "Scope Deliverables"
+  },
+  {
+   "fieldname": "custom_out_of_scope",
+   "fieldtype": "Text",
+   "label": "Out of Scope",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_section_break_h8otc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_cxo_team",
+   "fieldtype": "Table",
+   "label": "CXO Team",
+   "options": "CXO Team"
+  },
+  {
+   "fieldname": "custom_cxo_team_leader",
+   "fieldtype": "Link",
+   "label": "CXO Team Leader",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"TEAM LEADER\"]]",
+   "options": "User"
+  },
+  {
+   "default": "Tenders",
+   "fieldname": "custom_price_list",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Price List",
+   "options": "Price List",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_xkht",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "supplier_quotations_tab",
+   "fieldtype": "Tab Break",
+   "label": "Supplier Quotations"
+  },
+  {
+   "fieldname": "opportunity_supplier_quotation_table",
+   "fieldtype": "Table",
+   "label": "Opportunity Supplier Quotation Table",
+   "no_copy": 1,
+   "options": "Opportunity Supplier Quotation Table",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "icon": "fa fa-info-sign",
  "links": [],
- "modified": "2025-08-20 16:36:19.714154",
+ "modified": "2026-05-13 03:15:28.397177",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Opportunity Tenders",

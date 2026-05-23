@@ -1,15 +1,24 @@
-// Copyright (c) 2025, ard.ly and contributors
+// Copyright (c) 2026, ard.ly and contributors
 // For license information, please see license.txt
+
 
 frappe.provide("erpnext.crm");
 frappe.provide("ion_crm_sales");
-erpnext.pre_sales.set_as_lost("Opportunity Tenders");
+erpnext.pre_sales.set_as_lost("Opportunity ISP");
 erpnext.sales_common.setup_selling_controller();
 
 
 
-frappe.ui.form.on("Opportunity Tenders", {
+frappe.ui.form.on("Opportunity ISP", {
     onload: function (frm) {
+        frm.set_query("opportunity_from", function () {
+            return {
+                filters: {
+                    name: ["in", ["Customer", "Lead", "Prospect"]],
+                },
+            };
+        });
+
         frm.trigger("setup_queries");
     },
 
@@ -30,7 +39,7 @@ frappe.ui.form.on("Opportunity Tenders", {
             callback: function (r) {
                 if (r.message && r.message.custom_nationality) {
                     frappe.model.set_value(
-                        "Opportunity Tenders",
+                        "Opportunity ISP",
                         frm.doc.name,
                         "custom_nationality",
                         r.message.custom_nationality
@@ -193,13 +202,26 @@ frappe.ui.form.on("Opportunity Tenders", {
             frm.set_value("opportunity_type", "Dedicated");
         }
 
-        if (["Scoping"].includes(frm.doc.workflow_state)) {
+        if (!frm.doc.custom_request) {
+            frm.set_df_property("custom_requirements", "read_only", 1);
+        }
+
+        if (["Requirements Gathering"].includes(frm.doc.workflow_state)) {
+            frm.$wrapper.find("[data-fieldname='custom_scope']").hide();
+        } else {
+            frm.$wrapper.find("[data-fieldname='custom_scope']").show();
+        }
+
+        if (["Requirements Gathering", "Scoping"].includes(frm.doc.workflow_state)) {
             frm.$wrapper.find("[data-fieldname='custom_qa']").hide();
         } else {
             frm.$wrapper.find("[data-fieldname='custom_qa']").show();
         }
 
-        if (["Scoping"].includes(frm.doc.workflow_state) || frm.doc.workflow_state === "Rejected") {
+        if (
+            ["Requirements Gathering", "Scoping", "Qualifying"].includes(frm.doc.workflow_state) ||
+            frm.doc.workflow_state === "Rejected"
+        ) {
             frm.$wrapper.find("[data-fieldname='custom_survey']").hide();
         } else {
             frm.$wrapper.find("[data-fieldname='custom_survey']").show();
@@ -208,34 +230,42 @@ frappe.ui.form.on("Opportunity Tenders", {
     },
 
     validate: function (frm) {
+        if (frm.doc.custom_request) {
+            frm.set_df_property("custom_requirements", "read_only", 0);
+        }
+
         if (
-            frm.doc.custom_scope_description &&
-            frm.doc.custom_cxo_team.length > 0 &&
-            frm.doc.custom_cxo_team_leader &&
-            frm.doc.workflow_state === "Scoping"
+            frm.doc.custom_requirements &&
+            frm.doc.workflow_state !== "Scoping" &&
+            frm.doc.workflow_state === "Requirements Gathering"
         ) {
-            frm.set_value("workflow_state", "Surveying");
+            frm.set_value("workflow_state", "Scoping");
+            frm.refresh();
+        }
+
+        if (frm.doc.custom_scope_description && frm.doc.custom_deliverables && frm.doc.workflow_state === "Scoping") {
+            frm.set_value("workflow_state", "Qualifying");
             frm.refresh();
         }
     },
 
     make_supplier_quotation: function (frm) {
 		frappe.model.open_mapped_doc({
-			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_tenders.opportunity_tenders.make_supplier_quotation",
+			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_isp.opportunity_isp.make_supplier_quotation",
 			frm: frm,
 		});
 	},
 
 	make_request_for_quotation: function (frm) {
 		frappe.model.open_mapped_doc({
-			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_tenders.opportunity_tenders.make_request_for_quotation",
+			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_isp.opportunity_isp.make_request_for_quotation",
 			frm: frm,
 		});
 	},
 
     create_quotation() {
 		frappe.model.open_mapped_doc({
-			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_tenders.opportunity_tenders.make_quotation",
+			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_isp.opportunity_isp.make_quotation",
 			frm: cur_frm,
 		});
 	},
@@ -252,14 +282,14 @@ frappe.ui.form.on("Opportunity Tenders", {
 			method: "ion_crm_sales.ion_support.support.triggers.create_issue",
 			frm: cur_frm,
 			args: {
-				issue_from_dt: "Opportunity Tenders"
+				issue_from_dt: "Opportunity ISP"
 			}
 		})
 	},
 
 	create_material_request() {
 		frappe.model.open_mapped_doc({
-			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_tenders.opportunity_tenders.make_material_request",
+			method: "ion_crm_sales.ion_crm_sales.doctype.opportunity_isp.opportunity_isp.make_material_request",
 			frm: cur_frm,
 		});
 	},
@@ -395,8 +425,7 @@ frappe.ui.form.on("Opportunity Item", {
     },
 });
 
-
-ion_crm_sales.OpportunityTenders = class OpportunityTenders extends frappe.ui.form.Controller {
+ion_crm_sales.OpportunityISP = class OpportunityISP extends frappe.ui.form.Controller {
 
     refresh() {
 		this.show_notes();
@@ -423,4 +452,4 @@ ion_crm_sales.OpportunityTenders = class OpportunityTenders extends frappe.ui.fo
 
 }
 
-extend_cscript(cur_frm.cscript, new ion_crm_sales.OpportunityTenders({ frm: cur_frm }));
+extend_cscript(cur_frm.cscript, new ion_crm_sales.OpportunityISP({ frm: cur_frm }));

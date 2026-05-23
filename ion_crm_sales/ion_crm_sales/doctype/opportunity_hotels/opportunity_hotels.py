@@ -129,14 +129,44 @@ def make_quotation(source_name, target_doc=None):
 
 @frappe.whitelist()
 def make_supplier_quotation(source_name, target_doc=None):
+	def update_item(obj, target, source_parent):
+		target.stock_uom = obj.uom
+		target.conversion_factor = 1.0
+		if source_parent.get("custom_warehouse"):
+			target.warehouse = source_parent.custom_warehouse
+
+	def set_missing_values(source, target):
+		for fieldname in (
+			"custom_hotels_opportunity",
+			"custom_hotel_opportunity",
+			"custom_opportunity_hotels",
+		):
+			if frappe.get_meta("Supplier Quotation").has_field(fieldname):
+				target.set(fieldname, source.name)
+
 	doclist = get_mapped_doc(
 		"Opportunity Hotels",
 		source_name,
 		{
-			"Opportunity Hotels": {"doctype": "Supplier Quotation", "field_map": {"name": "opportunity"}},
-			"Opportunity Item": {"doctype": "Supplier Quotation Item", "field_map": {"uom": "stock_uom"}},
+			"Opportunity Hotels": {"doctype": "Supplier Quotation"},
+			"Opportunity Item": {
+				"doctype": "Supplier Quotation Item",
+				"field_map": {
+					"item_code": "item_code",
+					"item_name": "item_name",
+					"description": "description",
+					"qty": "qty",
+					"uom": "uom",
+					"rate": "rate",
+					"amount": "amount",
+					"brand": "brand",
+					"item_group": "item_group",
+				},
+				"postprocess": update_item,
+			},
 		},
 		target_doc,
+		set_missing_values,
 	)
 
 	return doclist
@@ -144,7 +174,19 @@ def make_supplier_quotation(source_name, target_doc=None):
 @frappe.whitelist()
 def make_request_for_quotation(source_name, target_doc=None):
 	def update_item(obj, target, source_parent):
+		target.stock_uom = obj.uom
 		target.conversion_factor = 1.0
+		if source_parent.get("custom_warehouse"):
+			target.warehouse = source_parent.custom_warehouse
+
+	def set_missing_values(source, target):
+		for fieldname in (
+			"custom_hotels_opportunity",
+			"custom_hotel_opportunity",
+			"custom_opportunity_hotels",
+		):
+			if frappe.get_meta("Request for Quotation").has_field(fieldname):
+				target.set(fieldname, source.name)
 
 	doclist = get_mapped_doc(
 		"Opportunity Hotels",
@@ -153,11 +195,64 @@ def make_request_for_quotation(source_name, target_doc=None):
 			"Opportunity Hotels": {"doctype": "Request for Quotation"},
 			"Opportunity Item": {
 				"doctype": "Request for Quotation Item",
-				"field_map": [["name", "opportunity_item"], ["parent", "opportunity"], ["uom", "uom"]],
+				"field_map": {
+					"name": "opportunity_item",
+					"parent": "opportunity",
+					"item_code": "item_code",
+					"item_name": "item_name",
+					"description": "description",
+					"qty": "qty",
+					"uom": "uom",
+					"brand": "brand",
+					"item_group": "item_group",
+				},
 				"postprocess": update_item,
 			},
 		},
 		target_doc,
+		set_missing_values,
+	)
+
+	return doclist
+
+
+@frappe.whitelist()
+def make_material_request(source_name, target_doc=None):
+	def set_missing_values(source, target):
+		from erpnext.controllers.accounts_controller import get_default_taxes_and_charges
+
+		material_request = frappe.get_doc(target)
+
+		taxes = get_default_taxes_and_charges("Sales Taxes and Charges Template", company=material_request.company)
+		if taxes.get("taxes"):
+			material_request.update(taxes)
+
+		material_request.run_method("set_missing_values")
+		material_request.material_request_type = "Material Issue"
+		for fieldname in ("custom_hotels_opportunity", "custom_hotel_opportunity"):
+			if frappe.get_meta("Material Request").has_field(fieldname):
+				material_request.set(fieldname, source.name)
+
+	doclist = get_mapped_doc(
+		"Opportunity Hotels",
+		source_name,
+		{
+			"Opportunity Hotels": {
+				"doctype": "Material Request",
+				"field_map": {"opportunity_from": "material_request_to", "name": "enq_no"},
+			},
+			"Opportunity Item": {
+				"doctype": "Material Request Item",
+				"field_map": {
+					"parent": "prevdoc_docname",
+					"parenttype": "prevdoc_doctype",
+					"uom": "stock_uom",
+				},
+				"add_if_empty": True,
+			},
+		},
+		target_doc,
+		set_missing_values,
 	)
 
 	return doclist

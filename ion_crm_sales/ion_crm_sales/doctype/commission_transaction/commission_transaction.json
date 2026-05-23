@@ -6,44 +6,43 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "amount",
-  "date",
+  "company",
+  "fiscal_year",
+  "quarter",
+  "department",
+  "sales_target_and_commission_sheet",
+  "sales_invoice",
+  "customer",
+  "calculation_version",
+  "calculation_hash",
+  "source_key",
+  "remarks",
+  "is_backfill",
+  "column_break_uorq",
+  "posting_date",
+  "fully_paid_on",
+  "transaction_status",
+  "transaction_kind",
+  "transaction_type",
+  "eligible_amount",
+  "actual_basis_amount",
+  "total_commission",
+  "source_payment_entries",
+  "reversal_of",
+  "reversed_by",
+  "section_break_neem",
+  "lines",
+  "section_break_iqtf",
   "percentage",
   "column_break_felj",
-  "invoice",
-  "invoice_status",
   "commission_status",
   "section_break_xugh",
   "beneficiaries"
  ],
  "fields": [
   {
-   "fieldname": "amount",
-   "fieldtype": "Currency",
-   "label": "Amount"
-  },
-  {
-   "default": "Today",
-   "fieldname": "date",
-   "fieldtype": "Date",
-   "label": "Date"
-  },
-  {
    "fieldname": "column_break_felj",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "invoice",
-   "fieldtype": "Link",
-   "label": "Invoice",
-   "options": "Sales Invoice",
-   "read_only": 1
-  },
-  {
-   "fieldname": "invoice_status",
-   "fieldtype": "Data",
-   "label": "Invoice Status",
-   "read_only": 1
   },
   {
    "fieldname": "commission_status",
@@ -67,12 +66,159 @@
    "fieldtype": "Percent",
    "label": "Percentage",
    "read_only": 1
+  },
+  {
+   "fieldname": "fiscal_year",
+   "fieldtype": "Link",
+   "label": "Fiscal Year",
+   "options": "Fiscal Year"
+  },
+  {
+   "fieldname": "quarter",
+   "fieldtype": "Select",
+   "label": "Quarter",
+   "options": "\nQ1\nQ2\nQ3\nQ4"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "label": "Department",
+   "options": "\nSales\nBusiness Accounts"
+  },
+  {
+   "fieldname": "sales_target_and_commission_sheet",
+   "fieldtype": "Link",
+   "label": "Sales Target and Commission Sheet",
+   "options": "Sales Target and Commission Sheet"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "calculation_version",
+   "fieldtype": "Data",
+   "label": "Calculation Version"
+  },
+  {
+   "fieldname": "calculation_hash",
+   "fieldtype": "Data",
+   "label": "Calculation Hash"
+  },
+  {
+   "fieldname": "source_key",
+   "fieldtype": "Data",
+   "label": "Source Key",
+   "unique": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_backfill",
+   "fieldtype": "Check",
+   "label": "is_backfill"
+  },
+  {
+   "fieldname": "column_break_uorq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "fully_paid_on",
+   "fieldtype": "Date",
+   "label": "Fully Paid On"
+  },
+  {
+   "fieldname": "transaction_status",
+   "fieldtype": "Select",
+   "label": "Transaction Status",
+   "options": "\nDraft\nPosted\nReversed\nSuperseded"
+  },
+  {
+   "fieldname": "transaction_kind",
+   "fieldtype": "Select",
+   "label": "Transaction Kind",
+   "options": "\nOriginal\nReversal\nCorrection\nBackfill"
+  },
+  {
+   "fieldname": "transaction_type",
+   "fieldtype": "Select",
+   "label": "Transaction Type",
+   "options": "\nNewLead\nUpsell\nOld\nRenewal"
+  },
+  {
+   "fieldname": "eligible_amount",
+   "fieldtype": "Currency",
+   "label": "Eligible Amount"
+  },
+  {
+   "fieldname": "actual_basis_amount",
+   "fieldtype": "Currency",
+   "label": "Actual Basis Amount"
+  },
+  {
+   "fieldname": "total_commission",
+   "fieldtype": "Currency",
+   "label": "Total Commission"
+  },
+  {
+   "fieldname": "source_payment_entries",
+   "fieldtype": "Small Text",
+   "label": "Source Payment Entries"
+  },
+  {
+   "fieldname": "reversal_of",
+   "fieldtype": "Link",
+   "label": "Reversal Of",
+   "options": "Commission Transaction"
+  },
+  {
+   "fieldname": "reversed_by",
+   "fieldtype": "Link",
+   "label": "Reversed By",
+   "options": "Commission Transaction"
+  },
+  {
+   "fieldname": "section_break_neem",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "lines",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "Commission Transaction Line"
+  },
+  {
+   "fieldname": "section_break_iqtf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-06 21:39:06.931231",
+ "modified": "2026-05-23 10:06:13.521217",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Commission Transaction",
