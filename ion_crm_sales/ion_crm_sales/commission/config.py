@@ -49,7 +49,7 @@ SALES_SPLITS = {
 # BA: non–ION Solutions category rates
 # ------------------------------------
 BA_RATES = {
-    "DEDICATED":   {"old": 0.0075,  "new": 0.03,   "upsell": 0.02,  "above": 0.06},
+    "DEDICATED":   {"old": 0.0075,  "new": 0.01,   "upsell": 0.02,  "above": 0.06},
     "ISPS":        {"old": 0.0025,  "new": 0.00125,"upsell": 0.0025,"above": 0.005},
     "HOTEL":       {"old": 0.01,    "new": 0.02,   "upsell": 0.03,  "above": 0.06},
     "HOTSPOT":     {"old": 0.02,    "new": 0.02,   "upsell": 0.03,  "above": 0.06},

@@ -56,12 +56,14 @@ doc_events = {
         "after_insert": "ion_crm_sales.ion_crm_sales.doc_events.distributor_handlers.create_sales_partner_for_distributor",
     },
     "Sales Invoice": {
+        "before_validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
         "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_invoice_handlers.validate_contract_for_source_sales_orders",
         "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
         "on_cancel": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
         "on_update_after_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
     },
     "Sales Order": {
+        "before_validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
         "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_insert",
         "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.validate",
     },

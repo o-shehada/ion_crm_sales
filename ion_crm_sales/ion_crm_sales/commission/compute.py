@@ -154,46 +154,50 @@ def compute_totals_quarterly(sheet):
                     if sp in per_person:
                         per_person[sp] += eq
 
-            # Exposure slices (amount), used for Above add-on
-            # Manager exposure share
+            # Exposure slices (amount), used for Above add-on.
+            # Base/actual sales use normal split; above-target uses the
+            # category's above split, e.g. Hotspot manager/rest = 20/80.
             if mgrs:
-                eq_mgr_amt = amount * splits["normal"]["manager"] / len(mgrs)
+                eq_mgr_actual = amount * splits["normal"]["manager"] / len(mgrs)
+                eq_mgr_above = amount * splits["above"]["manager"] / len(mgrs)
                 for sp in mgrs:
                     if sp not in actual_basis:
                         continue
-                    actual_basis[sp] += eq_mgr_amt
+                    actual_basis[sp] += eq_mgr_actual
                     tgt  = target.get(sp, 0.0) or 0.0
                     prev = cum_exposure.get(sp, 0.0) or 0.0
-                    above_part = max(0.0, (prev + eq_mgr_amt) - tgt) - max(0.0, prev - tgt)
+                    above_part = max(0.0, (prev + eq_mgr_above) - tgt) - max(0.0, prev - tgt)
                     if above_part > 0:
                         per_person[sp] += above_part * rates["above"]
-                    cum_exposure[sp] = prev + eq_mgr_amt
+                    cum_exposure[sp] = prev + eq_mgr_above
             else:
                 # if no managers, manager exposure realloc to rest too
                 if rest:
-                    eq_amt = amount * splits["normal"]["manager"] / len(rest)
+                    eq_actual = amount * splits["normal"]["manager"] / len(rest)
+                    eq_above = amount * splits["above"]["manager"] / len(rest)
                     for sp in rest:
                         if sp in actual_basis:
-                            actual_basis[sp] += eq_amt
+                            actual_basis[sp] += eq_actual
                         tgt  = target.get(sp, 0.0) or 0.0
                         prev = cum_exposure.get(sp, 0.0) or 0.0
-                        above_part = max(0.0, (prev + eq_amt) - tgt) - max(0.0, prev - tgt)
+                        above_part = max(0.0, (prev + eq_above) - tgt) - max(0.0, prev - tgt)
                         if above_part > 0:
                             per_person[sp] += above_part * rates["above"]
-                        cum_exposure[sp] = prev + eq_amt
+                        cum_exposure[sp] = prev + eq_above
 
             # Rest exposure share
             if rest:
-                eq_rest_amt = amount * splits["normal"]["rest"] / len(rest)
+                eq_rest_actual = amount * splits["normal"]["rest"] / len(rest)
+                eq_rest_above = amount * splits["above"]["rest"] / len(rest)
                 for sp in rest:
                     if sp in actual_basis:
-                        actual_basis[sp] += eq_rest_amt
+                        actual_basis[sp] += eq_rest_actual
                     tgt  = target.get(sp, 0.0) or 0.0
                     prev = cum_exposure.get(sp, 0.0) or 0.0
-                    above_part = max(0.0, (prev + eq_rest_amt) - tgt) - max(0.0, prev - tgt)
+                    above_part = max(0.0, (prev + eq_rest_above) - tgt) - max(0.0, prev - tgt)
                     if above_part > 0:
                         per_person[sp] += above_part * rates["above"]
-                    cum_exposure[sp] = prev + eq_rest_amt
+                    cum_exposure[sp] = prev + eq_rest_above
 
     # Update Sales lines on the sheet
     total_target = total_actual = total_commission = 0.0

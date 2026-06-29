@@ -14,10 +14,7 @@ frappe.ui.form.on("Commission Transaction", {
                         frappe.call({
                             method: 'ion_crm_sales.ion_crm_sales.doctype.commission_transaction.commission_transaction.create_commission_payment',
                             args: {
-                                source_docname: frm.doc.name,
-                                amount: frm.doc.amount,
-                                beneficiaries: frm.doc.beneficiaries,
-                                // Add any other key fields you need to pass
+                                source_docname: frm.doc.name
                             },
                             callback: function(r) {
                                 if (r.message) {

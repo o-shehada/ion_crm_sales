@@ -49,6 +49,7 @@
    "allow_on_submit": 1,
    "fieldname": "achievement_pct",
    "fieldtype": "Percent",
+   "hidden": 1,
    "label": "Achievement Pct",
    "read_only": 1
   },
@@ -76,7 +77,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-01-25 14:23:12.763948",
+ "modified": "2026-05-25 02:10:54.462855",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Commission Lines",

@@ -8,6 +8,7 @@ import frappe
 from frappe.utils import flt, getdate, now_datetime
 
 from ion_crm_sales.ion_crm_sales.commission.ba import (
+	_allocation_fractions_on_si,
 	_ams_on_si,
 	_ba_recipients_for_category,
 	_category_amounts_for_si as _ba_category_amounts_for_si,
@@ -157,21 +158,24 @@ def _sync_sales_transactions(sheet, q_start, q_end, target):
 			splits = SALES_SPLITS[cat]
 
 			if mgrs:
-				basis = amount * splits["normal"]["manager"] / len(mgrs)
+				base_basis = amount * splits["normal"]["manager"] / len(mgrs)
+				above_basis = amount * splits["above"]["manager"] / len(mgrs)
 				for sp in mgrs:
-					_add_base_line(lines, si, sp, "Sales", cat, basis, rates["normal"], len(mgrs))
-					_add_above_line(lines, si, sp, "Sales", cat, basis, rates["above"], target, cum_exposure)
+					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(mgrs))
+					_add_above_line(lines, si, sp, "Sales", cat, above_basis, rates["above"], target, cum_exposure)
 			elif rest:
-				basis = amount * splits["normal"]["manager"] / len(rest)
+				base_basis = amount * splits["normal"]["manager"] / len(rest)
+				above_basis = amount * splits["above"]["manager"] / len(rest)
 				for sp in rest:
-					_add_base_line(lines, si, sp, "Sales", cat, basis, rates["normal"], len(rest))
-					_add_above_line(lines, si, sp, "Sales", cat, basis, rates["above"], target, cum_exposure)
+					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(rest))
+					_add_above_line(lines, si, sp, "Sales", cat, above_basis, rates["above"], target, cum_exposure)
 
 			if rest:
-				basis = amount * splits["normal"]["rest"] / len(rest)
+				base_basis = amount * splits["normal"]["rest"] / len(rest)
+				above_basis = amount * splits["above"]["rest"] / len(rest)
 				for sp in rest:
-					_add_base_line(lines, si, sp, "Sales", cat, basis, rates["normal"], len(rest))
-					_add_above_line(lines, si, sp, "Sales", cat, basis, rates["above"], target, cum_exposure)
+					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(rest))
+					_add_above_line(lines, si, sp, "Sales", cat, above_basis, rates["above"], target, cum_exposure)
 
 		if lines:
 			_apply_line_targets(lines, target)
@@ -214,11 +218,12 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 			recipients = _people_on_sheet(
 				_ba_recipients_for_category(si, cat_key, externals_ok), people
 			)
-			if not recipients:
+			allocs = _allocation_fractions_on_si(si, recipients)
+			if not allocs:
 				continue
-			basis = amount / len(recipients)
 
-			for sp in recipients:
+			for sp, fraction in allocs.items():
+				basis = amount * fraction
 				if cat_key == "ION_SOLUTIONS":
 					role = _ion_role_for_person_on_si(si, sp)
 					if not role:
@@ -234,6 +239,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 						basis,
 						base_rate,
 						len(recipients),
+						split_percentage=allocs.get(sp, 0.0) * 100.0,
 						tx_type=tx_type,
 						ion_role=role,
 					)
@@ -269,6 +275,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 						basis,
 						base_rate,
 						len(recipients),
+						split_percentage=allocs.get(sp, 0.0) * 100.0,
 						tx_type=tx_type,
 					)
 					_add_above_line(
@@ -357,13 +364,12 @@ def _add_ba_penalty_lines(
 	for cat_key, amount in cat_amounts.items():
 		if amount <= 0:
 			continue
-		recipients = _ba_recipients_for_category(si, cat_key, externals_ok)
-		if not recipients:
+		recipients = _people_on_sheet(_ba_recipients_for_category(si, cat_key, externals_ok), ams)
+		allocs = _allocation_fractions_on_si(si, recipients)
+		if not allocs:
 			continue
-		basis = amount / len(recipients)
-		for sp in recipients:
-			if sp not in ams:
-				continue
+		for sp, fraction in allocs.items():
+			basis = amount * fraction
 			if cat_key == "ION_SOLUTIONS":
 				role = _ion_role_for_person_on_si(si, sp)
 				if not role:
@@ -401,7 +407,19 @@ def _add_ba_penalty_lines(
 		)
 
 
-def _add_base_line(lines, si, sp, department, category, basis, rate, split_count, tx_type=None, ion_role=None):
+def _add_base_line(
+	lines,
+	si,
+	sp,
+	department,
+	category,
+	basis,
+	rate,
+	split_count,
+	split_percentage=0,
+	tx_type=None,
+	ion_role=None,
+):
 	lines.append(
 		_line(
 			si,
@@ -414,7 +432,7 @@ def _add_base_line(lines, si, sp, department, category, basis, rate, split_count
 			basis * rate,
 			tx_type=tx_type,
 			split_count=split_count,
-			split_percentage=(100.0 / split_count if split_count else 0),
+			split_percentage=split_percentage,
 			ion_role=ion_role,
 		)
 	)

@@ -6,6 +6,7 @@ Handles:
   • Transaction-type detection (New Lead / Upsell / Renewal)
   • Category-specific rates (Dedicated, Hotel, ISPs, Hotspot-BA, Ultra-Malls)
   • ION Solutions role-based rates
+  • Sales-team allocation percentages
   • First-year contract add-on (+1%)
   • Project acquisition bonus (+3 000)
   • Late-payment penalties (AM only)
@@ -55,6 +56,28 @@ def _category_amounts_for_si(si) -> dict[str, float]:
 # Transaction type detection (Old / NewLead / Upsell)
 # -------------------------------------------------
 
+BA_TRANSACTION_TYPE_FIELDS = (
+    "custom_ba_transaction_type",
+    "custom_ba_commission_transaction_type",
+)
+
+BA_TRANSACTION_TYPE_ALIASES = {
+    "old": "Old",
+    "old account": "Old",
+    "old accounts": "Old",
+    "old accounts transactions": "Old",
+    "renewal": "Old",
+    "renewals": "Old",
+    "newlead": "NewLead",
+    "new lead": "NewLead",
+    "lead acquisition": "NewLead",
+    "new accounts lead acquisition": "NewLead",
+    "upsell": "Upsell",
+    "new accounts transactions": "Upsell",
+    "new accounts transactions / upsell": "Upsell",
+    "new accounts transactions \\ upsell": "Upsell",
+}
+
 @lru_cache(maxsize=4096)
 def _customer_has_prior_invoice(customer: str, before_date: date | None = None) -> bool:
     filters = {"customer": customer, "docstatus": 1}
@@ -98,19 +121,69 @@ def _customer_has_prior_fully_paid(customer: str, before_paid_on: date | None = 
     )
     return bool(rows)
 
+def _normalize_ba_transaction_type(value: str | None) -> str | None:
+    value = (value or "").strip()
+    if not value:
+        return None
+    return BA_TRANSACTION_TYPE_ALIASES.get(value.lower())
+
+
+def _get_manual_ba_transaction_type(doc) -> str | None:
+    for fieldname in BA_TRANSACTION_TYPE_FIELDS:
+        if doc.meta.has_field(fieldname):
+            tx_type = _normalize_ba_transaction_type(doc.get(fieldname))
+            if tx_type:
+                return tx_type
+    return None
+
+
+def _linked_sales_orders_for_si(si) -> list[str]:
+    sales_orders = []
+    for item in si.get("items") or []:
+        sales_order = item.get("sales_order")
+        if not sales_order and item.get("prevdoc_doctype") == "Sales Order":
+            sales_order = item.get("prevdoc_docname")
+        if sales_order and sales_order not in sales_orders:
+            sales_orders.append(sales_order)
+    return sales_orders
+
+
+def _explicit_ba_transaction_type(si) -> str | None:
+    tx_type = _get_manual_ba_transaction_type(si)
+    if tx_type:
+        return tx_type
+
+    sales_order_meta = frappe.get_meta("Sales Order")
+    if not any(sales_order_meta.has_field(fieldname) for fieldname in BA_TRANSACTION_TYPE_FIELDS):
+        return None
+
+    for sales_order in _linked_sales_orders_for_si(si):
+        so = frappe.get_doc("Sales Order", sales_order)
+        tx_type = _get_manual_ba_transaction_type(so)
+        if tx_type:
+            return tx_type
+    return None
+
+
 def detect_tx_type(si, fully_paid_on: "date", is_renewal_flag=False) -> str:
     """
-    NewLead → no submitted SI for this customer at/before this posting_date
-              AND no fully-paid SI strictly before this fully_paid_on.
-    Renewal → if explicit flag passed (not auto-detected here).
-    Upsell  → otherwise (has prior history).
+    Manual BA Transaction Type wins when available.
+    NewLead -> no submitted SI for this customer before this posting_date
+               AND no fully-paid SI strictly before this fully_paid_on.
+    Old     -> explicit renewal flag, or manual Old/Renewal value.
+    Upsell  -> otherwise, when customer has prior history.
     """
+    explicit_tx_type = _explicit_ba_transaction_type(si)
+    if explicit_tx_type:
+        return explicit_tx_type
+
+    if is_renewal_flag:
+        return "Old"
+
     had_prior_by_posting = _customer_has_prior_invoice(si.customer, before_date=si.posting_date)
     had_prior_by_paid    = _customer_has_prior_fully_paid(si.customer, before_paid_on=fully_paid_on)
     if not had_prior_by_posting and not had_prior_by_paid:
         return "NewLead"
-    if is_renewal_flag:
-        return "Old"
     return "Upsell"
 
 # -------------------------------------------
@@ -186,7 +259,7 @@ def _rate_non_ion(cat_key: str, tx_type: str, is_above: bool) -> float:
     if tx_type == "Old":
         return BA_RATES[cat_key]["old"]
     if tx_type == "NewLead":
-        return BA_RATES[cat_key]["new"]
+        return BA_RATES[cat_key]["new"] + BA_RATES[cat_key]["upsell"]
     return BA_RATES[cat_key]["upsell"]
 
 def _rate_ion(role: str, is_above: bool) -> float:
@@ -239,6 +312,32 @@ def _ba_recipients_for_category(si, cat_key: str, externals_ok) -> list[str]:
                 holders.append(st.get("sales_person"))
         return holders
     return _ba_team_on_si(si, bool(externals_ok))
+
+
+def _allocation_fractions_on_si(si, recipients: list[str]) -> dict[str, float]:
+    """
+    Return normalized allocation fractions for the provided recipients.
+
+    Uses Sales Team.allocated_percentage when available and falls back to an
+    even split if no usable allocation exists.
+    """
+    if not recipients:
+        return {}
+
+    raw = {sp: 0.0 for sp in recipients}
+    recipient_set = set(recipients)
+    for st in (si.get("sales_team") or []):
+        sp = st.get("sales_person")
+        if sp not in recipient_set:
+            continue
+        raw[sp] += flt(st.get("allocated_percentage") or 0.0)
+
+    total = sum(raw.values())
+    if total <= 0:
+        even = 1.0 / len(recipients)
+        return {sp: even for sp in recipients}
+
+    return {sp: raw.get(sp, 0.0) / total for sp in recipients}
 
 def _ams_on_si(si) -> list[str]:
     ams = []
@@ -345,18 +444,21 @@ def compute_ba_for_sheet(sheet, include_actuals: bool = False):
             or getattr(si, "external_rep_approved", None)
         )
 
-        # % commissions (even split) with over-target add-on for non-ION
+        # % commissions with allocation-based split and over-target add-on for non-ION
         for cat_key, amount in cat_amounts.items():
             if amount <= 0:
                 continue
-            rec = _ba_recipients_for_category(si, cat_key, externals_ok)
-            if not rec:
+            rec = [
+                sp
+                for sp in _ba_recipients_for_category(si, cat_key, externals_ok)
+                if sp in commission_by_person
+            ]
+            allocs = _allocation_fractions_on_si(si, rec)
+            if not allocs:
                 continue
-            eq_base = amount / len(rec)
 
-            for sp in rec:
-                if sp not in commission_by_person:
-                    continue
+            for sp, fraction in allocs.items():
+                eq_base = amount * fraction
 
                 actual_by_person[sp] += eq_base
 
@@ -421,13 +523,16 @@ def compute_ba_for_sheet(sheet, include_actuals: bool = False):
                 for cat_key, amount in cat_amounts.items():
                     if amount <= 0:
                         continue
-                    rec = _ba_recipients_for_category(si, cat_key, externals_ok)
-                    if not rec:
+                    rec = [
+                        sp
+                        for sp in _ba_recipients_for_category(si, cat_key, externals_ok)
+                        if sp in ams
+                    ]
+                    allocs = _allocation_fractions_on_si(si, rec)
+                    if not allocs:
                         continue
-                    eq_base = amount / len(rec)
-                    for sp in rec:
-                        if sp not in ams:
-                            continue
+                    for sp, fraction in allocs.items():
+                        eq_base = amount * fraction
                         if cat_key == "ION_SOLUTIONS":
                             role = _ion_role_for_person_on_si(si, sp)
                             if not role:

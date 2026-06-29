@@ -4,7 +4,7 @@
 # import frappe
 from frappe.model.document import Document
 import frappe
-from frappe.utils import nowdate
+from frappe.utils import flt, nowdate
 import json
 
 class CommissionTransaction(Document):
@@ -12,44 +12,91 @@ class CommissionTransaction(Document):
 
 
 @frappe.whitelist()
-def create_commission_payment(source_docname, amount, beneficiaries):
-    # 1. Fetch the source document for a complete data reference
+def create_commission_payment(source_docname, amount=None, beneficiaries=None):
     source_doc = frappe.get_doc('Commission Transaction', source_docname)
 
-    # 2. Create a new document object for Commission Payment
+    if source_doc.get("commission_status") == "Paid":
+        existing = frappe.db.get_value(
+            "Commission Payment",
+            {"commission_transaction": source_docname},
+            "name",
+        )
+        if existing:
+            return existing
+
+    amount = flt(amount or source_doc.get("total_commission") or source_doc.get("amount"))
+    payment_beneficiaries = _get_payment_beneficiaries(source_doc, beneficiaries, amount)
+    if not payment_beneficiaries:
+        frappe.throw("No beneficiaries found for this Commission Transaction.")
+
     new_doc = frappe.new_doc('Commission Payment')
 
-    # 3. Map fields from the source document to the new document
+    new_doc.commission_transaction = source_docname
+    new_doc.date_of_payment = nowdate()
 
-    # Linking the documents
-    new_doc.commission_transaction = source_docname # Create a Link field in Commission Payment for Commission Transaction
-    
-    # Other important fields
-    new_doc.date_of_payment = nowdate() # Set payment date to today
-    new_doc.status = 'Draft' # Start as Draft
-
-    print(float(amount))
-    print(len(json.loads(beneficiaries)))
-
-    for b in json.loads(beneficiaries):
-        new_doc.append('beneficiaries', {
-            'party': b['party'],
-            'beneficiary': b['beneficiary'],
-            'share': (float(amount) / len(json.loads(beneficiaries))) if len(json.loads(beneficiaries)) > 0 else 0
-        })
+    for row in payment_beneficiaries:
+        new_doc.append('beneficiaries', row)
 
     try:
-        source_doc.commission_status = 'Paid'
-        source_doc.save()
-        # 4. Save and insert the new document
         new_doc.insert(ignore_permissions=True)
-        # Note: If Commission Payment has a naming series, insert will generate the name.
+
+        source_doc.commission_status = 'Paid'
+        source_doc.save(ignore_permissions=True)
+
         frappe.db.commit()
 
-        # 5. Return the name of the new document
         return new_doc.name
 
     except Exception as e:
-        # Log the error and throw an exception to the user
         frappe.log_error(frappe.get_traceback(), 'Commission Payment Creation Error')
         frappe.throw(f"Could not create Commission Payment: {e}")
+
+
+def _get_payment_beneficiaries(source_doc, beneficiaries=None, amount=0):
+    parsed_beneficiaries = _parse_beneficiaries(beneficiaries)
+    if not parsed_beneficiaries:
+        parsed_beneficiaries = [
+            {"party": row.party, "beneficiary": row.beneficiary}
+            for row in (source_doc.get("beneficiaries") or [])
+            if row.get("party") and row.get("beneficiary")
+        ]
+
+    if parsed_beneficiaries:
+        share = flt(amount) / len(parsed_beneficiaries)
+        return [
+            {
+                "party": row.get("party"),
+                "beneficiary": row.get("beneficiary"),
+                "share": share,
+            }
+            for row in parsed_beneficiaries
+        ]
+
+    shares_by_party = {}
+    for line in source_doc.get("lines") or []:
+        beneficiary = line.get("employee") or line.get("sales_person")
+        if not beneficiary:
+            continue
+
+        party = "Employee" if line.get("employee") else "Sales Person"
+        key = (party, beneficiary)
+        shares_by_party[key] = shares_by_party.get(key, 0) + flt(line.get("commission_amount"))
+
+    return [
+        {"party": party, "beneficiary": beneficiary, "share": share}
+        for (party, beneficiary), share in shares_by_party.items()
+        if share
+    ]
+
+
+def _parse_beneficiaries(beneficiaries):
+    if not beneficiaries:
+        return []
+
+    if isinstance(beneficiaries, str):
+        try:
+            return json.loads(beneficiaries)
+        except Exception:
+            return []
+
+    return beneficiaries
