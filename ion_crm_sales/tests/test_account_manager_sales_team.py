@@ -27,6 +27,77 @@ class TestAccountManagerSalesTeam(FrappeTestCase):
         sales_person = frappe.get_doc("Sales Person", sales_order.sales_team[0].sales_person)
         self.assertEqual(sales_person.sales_person_name, account_manager.full_name)
 
+    def test_user_sales_team_allocation_is_preserved_after_account_manager_sync(self):
+        from ion_crm_sales.ion_crm_sales.doc_events.quotation_handlers import (
+            get_or_create_sales_person_for_user,
+        )
+        from ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers import (
+            set_account_manager_sales_team,
+        )
+        from ion_crm_sales.opportunity import make_quotation
+        from ion_crm_sales.quotation import make_sales_order
+
+        account_manager = self.create_account_manager_user()
+        opportunity = self.create_opportunity(account_manager.name)
+
+        quotation = make_quotation(opportunity.name)
+        quotation.valid_till = add_months(today(), 1)
+        quotation.insert(ignore_permissions=True)
+        quotation.submit()
+
+        sales_order = make_sales_order(quotation.name)
+        second_user = self.create_account_manager_user()
+        second_sales_person = get_or_create_sales_person_for_user(second_user.name)
+
+        sales_order.sales_team[0].allocated_percentage = 60
+        sales_order.append(
+            "sales_team",
+            {
+                "sales_person": second_sales_person,
+                "allocated_percentage": 40,
+            },
+        )
+
+        set_account_manager_sales_team(sales_order)
+
+        self.assertEqual(
+            [row.allocated_percentage for row in sales_order.sales_team],
+            [60, 40],
+        )
+
+    def test_contract_creation_does_not_require_a_hard_coded_template(self):
+        from ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers import (
+            create_contract,
+        )
+        from ion_crm_sales.opportunity import make_quotation
+        from ion_crm_sales.quotation import make_sales_order
+
+        account_manager = self.create_account_manager_user()
+        opportunity = self.create_opportunity(account_manager.name)
+
+        quotation = make_quotation(opportunity.name)
+        quotation.valid_till = add_months(today(), 1)
+        quotation.insert(ignore_permissions=True)
+        quotation.submit()
+
+        sales_order = make_sales_order(quotation.name)
+        sales_order.db_insert()
+
+        contract_name = create_contract(
+            sales_order.name,
+            contract_terms="<p>Test contract terms</p>",
+        )
+        contract = frappe.get_doc("Contract", contract_name)
+
+        self.assertFalse(contract.contract_template)
+        self.assertEqual(contract.contract_terms, "<p>Test contract terms</p>")
+        self.assertEqual(contract.document_type, "Sales Order")
+        self.assertEqual(contract.document_name, sales_order.name)
+        self.assertEqual(
+            frappe.db.get_value("Sales Order", sales_order.name, "custom_contract"),
+            contract.name,
+        )
+
     def create_account_manager_user(self):
         suffix = random_string(8).lower()
         return frappe.get_doc(

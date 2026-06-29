@@ -124,14 +124,15 @@ def set_sales_team_contributor(doc, sales_person):
     if not sales_team_field or not sales_team_field.options:
         return
 
-    existing_row = None
-    for row in doc.get("sales_team") or []:
-        if row.sales_person == sales_person:
-            existing_row = row
-        else:
-            row.allocated_percentage = 0
+    # Account Manager is an initial default, not an allocation override.
+    # Once rows exist, preserve user-selected contributors and percentages.
+    if doc.get("sales_team"):
+        return
 
-    if not existing_row:
-        existing_row = doc.append("sales_team", {"sales_person": sales_person})
-
-    existing_row.allocated_percentage = 100
+    doc.append(
+        "sales_team",
+        {
+            "sales_person": sales_person,
+            "allocated_percentage": 100,
+        },
+    )

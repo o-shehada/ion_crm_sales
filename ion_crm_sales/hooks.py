@@ -121,6 +121,11 @@ fixtures = [
     # {"doctype": "Report", "filters": {"module": ["=", "Ion Crm Sales"]}}
 ]
 
+after_migrate = [
+    "ion_crm_sales.migration.remove_conflicting_opportunity_layout_setters",
+    "ion_crm_sales.migration.remove_legacy_sales_order_contract_scripts",
+]
+
 scheduler_events = {
     "hourly": ["ion_crm_sales.notifications.send_subscription_expiry_alerts"]
 }
@@ -175,6 +180,7 @@ doctype_js = {
     "Opportunity Hotels": "public/js/opportunity_survey.js",
     "Opportunity Tenders": "public/js/opportunity_survey.js",
     "Opportunity ISP": "public/js/opportunity_survey.js",
+    "Sales Order": "public/js/sales_order_contract.js",
     "Material Request": "public/js/material_request.js",
     "Delivery Note": "public/js/delivery_note.js",
 }
