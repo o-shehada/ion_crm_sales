@@ -140,5 +140,5 @@ def get_quotation_link_field(doctype):
 
 
 def validate(doc, method):
-    if not doc.custom_survey_template:
+    if not doc.get("custom_survey_template"):
         return

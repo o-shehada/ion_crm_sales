@@ -33,76 +33,59 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
                 {"sales_person": rep.name, "allocated_percentage": 70},
             ],
         )
+        self.assertEqual(invoice.custom_opportunity_from, "Dedicated")
+        self.assertEqual(invoice.custom_service_category, "Home")
 
-        sheet = frappe.get_doc(
-            {
-                "doctype": "Sales Target and Commission Sheet",
-                "company": company.name,
-                "fiscal_year": fiscal_year,
-                "quarter": "Q2",
-                "commission_lines": [
-                    {"sales_person": manager.name, "department": "Sales"},
-                    {"sales_person": rep.name, "department": "Sales"},
-                ],
-            }
-        ).insert(ignore_permissions=True)
+        for sales_person, expected_target, expected_basis, expected_commission in (
+            (manager.name, 5000, 6000, 6),
+            (rep.name, 10000, 14000, 19),
+        ):
+            auto_sheet_name = frappe.db.get_value(
+                "Sales Target and Commission Sheet",
+                {
+                    "company": company.name,
+                    "fiscal_year": fiscal_year,
+                    "quarter": "Q2",
+                    "sales_person": sales_person,
+                },
+                "name",
+            )
+            self.assertTrue(auto_sheet_name)
+            auto_sheet = frappe.get_doc(
+                "Sales Target and Commission Sheet", auto_sheet_name
+            )
+            self.assertEqual(auto_sheet.sales_person, sales_person)
+            self.assertEqual(len(auto_sheet.invoice_history), 1)
+            self.assertEqual(auto_sheet.invoice_history[0].sales_invoice, invoice.name)
+            self.assertEqual(auto_sheet.invoice_history[0].invoice_status, "Paid")
+            self.assertAlmostEqual(auto_sheet.invoice_history[0].invoice_amount, 20000)
+            self.assertAlmostEqual(
+                auto_sheet.invoice_history[0].commission_amount,
+                expected_commission,
+            )
+            self.assertAlmostEqual(auto_sheet.total_paid_invoices, expected_commission)
+            self.assertEqual(auto_sheet.total_unpaid_invoices, 0)
+            self.assertAlmostEqual(auto_sheet.total_paid_invoice_amount, 20000)
+            self.assertEqual(auto_sheet.total_unpaid_invoice_amount, 0)
+            self.assertEqual(auto_sheet.transaction_sync_status, "Synced")
+            self.assertEqual(auto_sheet.source_of_totals, "Commission Transactions")
+            self.assertEqual(auto_sheet.commission_transaction_count, 1)
+            self.assertAlmostEqual(auto_sheet.total_target, expected_target)
+            self.assertAlmostEqual(auto_sheet.total_actual_sales, 20000)
+            self.assertAlmostEqual(auto_sheet.total_commission, expected_commission)
 
-        sheet.reload()
-        transactions = frappe.get_all(
-            "Commission Transaction",
-            filters={"sales_target_and_commission_sheet": sheet.name},
-            pluck="name",
-        )
-
-        self.assertEqual(len(transactions), 1)
-        self.assertEqual(sheet.transaction_sync_status, "Synced")
-        self.assertEqual(sheet.source_of_totals, "Commission Transactions")
-        self.assertEqual(sheet.commission_transaction_count, 1)
-        self.assertAlmostEqual(sheet.total_target, 15000)
-        self.assertAlmostEqual(sheet.total_actual_sales, 20000)
-        self.assertAlmostEqual(sheet.total_commission, 25)
-
-        tx = frappe.get_doc("Commission Transaction", transactions[0])
-        self.assertEqual(tx.sales_invoice, invoice.name)
-        self.assertEqual(tx.department, "Sales")
-        self.assertEqual(tx.transaction_status, "Draft")
-        self.assertEqual(tx.transaction_kind, "Original")
-        self.assertEqual(tx.fully_paid_on, getdate("2026-04-20"))
-        self.assertAlmostEqual(tx.eligible_amount, 20000)
-        self.assertAlmostEqual(tx.total_commission, 25)
-
-        self.assert_line(tx, manager.name, "Base", basis=6000, rate=0.05, commission=3)
-        self.assert_line(
-            tx,
-            manager.name,
-            "Above Target",
-            basis=1000,
-            rate=0.3,
-            commission=3,
-            cumulative_before=0,
-            cumulative_after=6000,
-            above_target_amount=1000,
-        )
-        self.assert_line(tx, rep.name, "Base", basis=14000, rate=0.05, commission=7)
-        self.assert_line(
-            tx,
-            rep.name,
-            "Above Target",
-            basis=4000,
-            rate=0.3,
-            commission=12,
-            cumulative_before=0,
-            cumulative_after=14000,
-            above_target_amount=4000,
-        )
-
-        by_person = {line.sales_person: line for line in sheet.commission_lines}
-        self.assertAlmostEqual(by_person[manager.name].target_value, 5000)
-        self.assertAlmostEqual(by_person[manager.name].actual_sales, 6000)
-        self.assertAlmostEqual(by_person[manager.name].commission_value, 6)
-        self.assertAlmostEqual(by_person[rep.name].target_value, 10000)
-        self.assertAlmostEqual(by_person[rep.name].actual_sales, 14000)
-        self.assertAlmostEqual(by_person[rep.name].commission_value, 19)
+            transaction = frappe.db.get_value(
+                "Commission Transaction",
+                {"sales_target_and_commission_sheet": auto_sheet.name},
+                "name",
+            )
+            tx = frappe.get_doc("Commission Transaction", transaction)
+            self.assertEqual(tx.sales_invoice, invoice.name)
+            self.assertEqual(tx.department, "Sales")
+            self.assertEqual(tx.fully_paid_on, getdate("2026-04-20"))
+            self.assertAlmostEqual(tx.eligible_amount, expected_basis)
+            self.assertAlmostEqual(tx.total_commission, expected_commission)
+            self.assertTrue(all(line.sales_person == sales_person for line in tx.lines))
 
     def test_sales_hotspot_above_target_uses_above_split(self):
         fiscal_year = "2026"
@@ -135,68 +118,38 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
             ],
         )
 
-        sheet = frappe.get_doc(
-            {
-                "doctype": "Sales Target and Commission Sheet",
-                "company": company.name,
-                "fiscal_year": fiscal_year,
-                "quarter": "Q2",
-                "commission_lines": [
-                    {"sales_person": manager.name, "department": "Sales"},
-                    {"sales_person": rep.name, "department": "Sales"},
-                ],
-            }
-        ).insert(ignore_permissions=True)
-        sheet.reload()
-
-        tx = frappe.get_doc(
-            "Commission Transaction",
-            frappe.get_all(
-                "Commission Transaction",
-                filters={"sales_target_and_commission_sheet": sheet.name},
-                pluck="name",
-            )[0],
-        )
-
         sales_order = frappe.get_doc("Sales Order", flow["sales_order"])
         invoice = frappe.get_doc("Sales Invoice", flow["sales_invoice"])
         self.assertAlmostEqual(sum(row.allocated_percentage for row in sales_order.sales_team), 100)
         self.assertAlmostEqual(sum(row.allocated_percentage for row in invoice.sales_team), 100)
 
-        self.assertEqual(tx.sales_invoice, flow["sales_invoice"])
-        self.assertAlmostEqual(tx.total_commission, 800)
-        self.assert_line(tx, manager.name, "Base", basis=6000, rate=1.0, commission=60)
-        self.assert_line(
-            tx,
-            manager.name,
-            "Above Target",
-            basis=2000,
-            rate=6.0,
-            commission=120,
-            cumulative_before=0,
-            cumulative_after=4000,
-            above_target_amount=2000,
-        )
-        self.assert_line(tx, rep.name, "Base", basis=14000, rate=1.0, commission=140)
-        self.assert_line(
-            tx,
-            rep.name,
-            "Above Target",
-            basis=8000,
-            rate=6.0,
-            commission=480,
-            cumulative_before=0,
-            cumulative_after=16000,
-            above_target_amount=8000,
-        )
-
-        by_person = {line.sales_person: line for line in sheet.commission_lines}
-        self.assertAlmostEqual(by_person[manager.name].target_value, 2000)
-        self.assertAlmostEqual(by_person[manager.name].actual_sales, 6000)
-        self.assertAlmostEqual(by_person[manager.name].commission_value, 180)
-        self.assertAlmostEqual(by_person[rep.name].target_value, 8000)
-        self.assertAlmostEqual(by_person[rep.name].actual_sales, 14000)
-        self.assertAlmostEqual(by_person[rep.name].commission_value, 620)
+        for sales_person, expected_target, expected_basis, expected_commission in (
+            (manager.name, 2000, 6000, 180),
+            (rep.name, 8000, 14000, 620),
+        ):
+            sheet = frappe.get_doc(
+                "Sales Target and Commission Sheet",
+                frappe.db.get_value(
+                    "Sales Target and Commission Sheet",
+                    {"sales_person": sales_person, "quarter": "Q2"},
+                    "name",
+                ),
+            )
+            tx = frappe.get_doc(
+                "Commission Transaction",
+                frappe.db.get_value(
+                    "Commission Transaction",
+                    {"sales_target_and_commission_sheet": sheet.name},
+                    "name",
+                ),
+            )
+            self.assertEqual(tx.sales_invoice, flow["sales_invoice"])
+            self.assertAlmostEqual(tx.eligible_amount, expected_basis)
+            self.assertAlmostEqual(tx.total_commission, expected_commission)
+            self.assertAlmostEqual(sheet.total_target, expected_target)
+            self.assertAlmostEqual(sheet.total_actual_sales, 20000)
+            self.assertAlmostEqual(sheet.total_commission, expected_commission)
+            self.assertTrue(all(line.sales_person == sales_person for line in tx.lines))
 
     def test_ba_newlead_uses_allocated_percentage_and_combined_rate(self):
         fiscal_year = "2026"
@@ -217,49 +170,41 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
                 {"sales_person": ba_am.name, "allocated_percentage": 30},
                 {"sales_person": ba_exec.name, "allocated_percentage": 70},
             ],
+            invoice_flags={"custom_ba_transaction_type": "Lead Acquisition"},
         )
 
-        sheet = frappe.get_doc(
-            {
-                "doctype": "Sales Target and Commission Sheet",
-                "company": company.name,
-                "fiscal_year": fiscal_year,
-                "quarter": "Q2",
-                "commission_lines": [
-                    {"sales_person": ba_am.name, "department": "Business Accounts"},
-                    {"sales_person": ba_exec.name, "department": "Business Accounts"},
-                ],
-            }
-        ).insert(ignore_permissions=True)
-        sheet.reload()
-
-        tx = frappe.get_doc(
-            "Commission Transaction",
-            frappe.get_all(
+        for sales_person, expected_basis, expected_commission, expected_split in (
+            (ba_am.name, 2400, 72, 30),
+            (ba_exec.name, 5600, 168, 70),
+        ):
+            sheet_name = frappe.db.get_value(
+                "Sales Target and Commission Sheet",
+                {"sales_person": sales_person, "quarter": "Q2"},
+                "name",
+            )
+            sheet = frappe.get_doc("Sales Target and Commission Sheet", sheet_name)
+            tx = frappe.get_doc(
                 "Commission Transaction",
-                filters={"sales_target_and_commission_sheet": sheet.name},
-                pluck="name",
-            )[0],
-        )
-
-        self.assertEqual(tx.sales_invoice, flow["sales_invoice"])
-        self.assertEqual(tx.transaction_type, "NewLead")
-        self.assertAlmostEqual(tx.total_commission, 400)
-
-        self.assert_line(tx, ba_am.name, "Base", basis=2400, rate=5.0, commission=120)
-        self.assert_line(tx, ba_exec.name, "Base", basis=5600, rate=5.0, commission=280)
-
-        am_base = next(line for line in tx.lines if line.sales_person == ba_am.name and line.commission_component == "Base")
-        exec_base = next(line for line in tx.lines if line.sales_person == ba_exec.name and line.commission_component == "Base")
-        self.assertAlmostEqual(am_base.split_percentage, 30)
-        self.assertAlmostEqual(exec_base.split_percentage, 70)
-
-        by_person = {line.sales_person: line for line in sheet.commission_lines}
-        self.assertAlmostEqual(by_person[ba_am.name].actual_sales, 2400)
-        self.assertAlmostEqual(by_person[ba_am.name].commission_value, 120)
-        self.assertAlmostEqual(by_person[ba_exec.name].actual_sales, 5600)
-        self.assertAlmostEqual(by_person[ba_exec.name].commission_value, 280)
-        self.assertAlmostEqual(sheet.total_commission, 400)
+                frappe.db.get_value(
+                    "Commission Transaction",
+                    {"sales_target_and_commission_sheet": sheet.name},
+                    "name",
+                ),
+            )
+            self.assertEqual(tx.sales_invoice, flow["sales_invoice"])
+            self.assertEqual(tx.transaction_type, "NewLead")
+            self.assertAlmostEqual(tx.eligible_amount, expected_basis)
+            self.assertAlmostEqual(tx.total_commission, expected_commission)
+            self.assertAlmostEqual(sheet.total_actual_sales, 8000)
+            self.assertAlmostEqual(sheet.total_commission, expected_commission)
+            self.assertEqual(
+                sheet.invoice_history[0].custom_ba_transaction_type,
+                "Lead Acquisition",
+            )
+            self.assertEqual(sheet.invoice_history[0].service_category, "Dedicated")
+            self.assertAlmostEqual(sheet.invoice_history[0].invoice_amount, 8000)
+            base = next(line for line in tx.lines if line.commission_component == "Base")
+            self.assertAlmostEqual(base.split_percentage, expected_split)
 
     def test_payment_trigger_targets_only_matching_sales_person_sheets(self):
         from ion_crm_sales.ion_crm_sales.commission.triggers import _affected_sheet_candidates
@@ -289,25 +234,20 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
         )
 
         matching_sheet = frappe.get_doc(
-            {
-                "doctype": "Sales Target and Commission Sheet",
-                "company": company.name,
-                "fiscal_year": fiscal_year,
-                "quarter": "Q2",
-                "commission_lines": [
-                    {"sales_person": matching_rep.name, "department": "Sales"},
-                ],
-            }
-        ).insert(ignore_permissions=True)
+            "Sales Target and Commission Sheet",
+            frappe.db.get_value(
+                "Sales Target and Commission Sheet",
+                {"sales_person": matching_rep.name, "quarter": "Q2"},
+                "name",
+            ),
+        )
         unrelated_person_sheet = frappe.get_doc(
             {
                 "doctype": "Sales Target and Commission Sheet",
                 "company": company.name,
                 "fiscal_year": fiscal_year,
                 "quarter": "Q2",
-                "commission_lines": [
-                    {"sales_person": unrelated_rep.name, "department": "Sales"},
-                ],
+                "sales_person": unrelated_rep.name,
             }
         ).insert(ignore_permissions=True)
         other_quarter_sheet = frappe.get_doc(
@@ -316,9 +256,7 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
                 "company": company.name,
                 "fiscal_year": fiscal_year,
                 "quarter": "Q3",
-                "commission_lines": [
-                    {"sales_person": matching_rep.name, "department": "Sales"},
-                ],
+                "sales_person": matching_rep.name,
             }
         ).insert(ignore_permissions=True)
 
@@ -330,7 +268,205 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
         self.assertNotIn(unrelated_person_sheet.name, candidate_names)
         self.assertNotIn(other_quarter_sheet.name, candidate_names)
 
-    def create_paid_sales_invoice(self, company, amount, sales_team, return_chain=False):
+
+    def test_invoice_submit_creates_unpaid_person_sheet_history(self):
+        fiscal_year = "2026"
+        company = self.get_company()
+        self.ensure_item_group("Home")
+        distribution = self.create_even_monthly_distribution(fiscal_year)
+        rep = self.create_sales_person(
+            target_amount=40000,
+            distribution=distribution.name,
+            fiscal_year=fiscal_year,
+            employee=self.create_employee(company).name,
+        )
+
+        invoice = self.create_paid_sales_invoice(
+            company=company,
+            amount=10000,
+            sales_team=[
+                {
+                    "sales_person": rep.name,
+                    "custom_manual_commission_percentage": 1,
+                    "allocated_percentage": 100,
+                }
+            ],
+            pay_invoice=False,
+        )
+
+        sheet_name = frappe.db.get_value(
+            "Sales Target and Commission Sheet",
+            {
+                "company": company.name,
+                "fiscal_year": fiscal_year,
+                "quarter": "Q2",
+                "sales_person": rep.name,
+            },
+            "name",
+        )
+        self.assertTrue(sheet_name)
+        sheet = frappe.get_doc("Sales Target and Commission Sheet", sheet_name)
+        self.assertEqual(len(sheet.invoice_history), 1)
+        self.assertEqual(sheet.invoice_history[0].sales_invoice, invoice.name)
+        self.assertEqual(sheet.invoice_history[0].invoice_status, "Unpaid")
+        self.assertAlmostEqual(sheet.invoice_history[0].invoice_amount, 10000)
+        self.assertAlmostEqual(sheet.invoice_history[0].commission_rate, 1)
+        self.assertAlmostEqual(sheet.invoice_history[0].commission_amount, 100)
+        self.assertEqual(sheet.total_paid_invoices, 0)
+        self.assertAlmostEqual(sheet.total_unpaid_invoices, 100)
+        self.assertEqual(sheet.total_paid_invoice_amount, 0)
+        self.assertAlmostEqual(sheet.total_unpaid_invoice_amount, 10000)
+
+    def test_payment_recalculates_submitted_commission_sheet(self):
+        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+        fiscal_year = "2026"
+        company = self.get_company()
+        self.ensure_item_group("Home")
+        distribution = self.create_even_monthly_distribution(fiscal_year)
+        rep = self.create_sales_person(
+            target_amount=40000,
+            distribution=distribution.name,
+            fiscal_year=fiscal_year,
+            employee=self.create_employee(company).name,
+        )
+        invoice = self.create_paid_sales_invoice(
+            company=company,
+            amount=10000,
+            sales_team=[{"sales_person": rep.name, "allocated_percentage": 100}],
+            pay_invoice=False,
+        )
+        sheet_name = frappe.db.get_value(
+            "Sales Target and Commission Sheet",
+            {
+                "company": company.name,
+                "fiscal_year": fiscal_year,
+                "quarter": "Q2",
+                "sales_person": rep.name,
+            },
+            "name",
+        )
+        sheet = frappe.get_doc("Sales Target and Commission Sheet", sheet_name)
+        sheet.submit()
+        previous_sync_on = sheet.last_transaction_sync_on
+
+        payment = get_payment_entry("Sales Invoice", invoice.name)
+        payment.posting_date = "2026-04-20"
+        payment.reference_no = random_string(10)
+        payment.reference_date = "2026-04-20"
+        payment.paid_to = company.default_cash_account
+        payment.insert(ignore_permissions=True)
+        payment.submit()
+
+        sheet.reload()
+        self.assertEqual(sheet.docstatus, 1)
+        self.assertEqual(sheet.transaction_sync_status, "Synced")
+        self.assertEqual(sheet.commission_transaction_count, 1)
+        self.assertGreater(sheet.last_transaction_sync_on, previous_sync_on)
+
+    def test_unpaid_invoice_submit_does_not_modify_existing_transactions(self):
+        from ion_crm_sales.ion_crm_sales.commission.api import recalculate_sheet
+
+        fiscal_year = "2026"
+        company = self.get_company()
+        self.ensure_item_group("Home")
+        distribution = self.create_even_monthly_distribution(fiscal_year)
+        rep = self.create_sales_person(
+            target_amount=40000,
+            distribution=distribution.name,
+            fiscal_year=fiscal_year,
+            employee=self.create_employee(company).name,
+        )
+        self.create_paid_sales_invoice(
+            company=company,
+            amount=10000,
+            sales_team=[{"sales_person": rep.name, "allocated_percentage": 100}],
+        )
+        sheet_name = frappe.db.get_value(
+            "Sales Target and Commission Sheet",
+            {"sales_person": rep.name, "quarter": "Q2"},
+            "name",
+        )
+        transaction_name = frappe.db.get_value(
+            "Commission Transaction",
+            {"sales_target_and_commission_sheet": sheet_name},
+            "name",
+        )
+        before = frappe.db.get_value(
+            "Commission Transaction",
+            transaction_name,
+            ["modified", "calculation_hash"],
+            as_dict=True,
+        )
+
+        recalculate_sheet(sheet_name)
+        after_unchanged_rebuild = frappe.db.get_value(
+            "Commission Transaction",
+            transaction_name,
+            ["modified", "calculation_hash"],
+            as_dict=True,
+        )
+        self.assertEqual(after_unchanged_rebuild.modified, before.modified)
+        self.assertEqual(after_unchanged_rebuild.calculation_hash, before.calculation_hash)
+
+        self.create_paid_sales_invoice(
+            company=company,
+            amount=5000,
+            sales_team=[{"sales_person": rep.name, "allocated_percentage": 100}],
+            pay_invoice=False,
+        )
+
+        after = frappe.db.get_value(
+            "Commission Transaction",
+            transaction_name,
+            ["modified", "calculation_hash"],
+            as_dict=True,
+        )
+        self.assertEqual(after.modified, before.modified)
+        self.assertEqual(after.calculation_hash, before.calculation_hash)
+
+    def test_payment_cancellation_rebuilds_existing_transaction_sheet(self):
+        fiscal_year = "2026"
+        company = self.get_company()
+        self.ensure_item_group("Home")
+        distribution = self.create_even_monthly_distribution(fiscal_year)
+        rep = self.create_sales_person(
+            target_amount=40000,
+            distribution=distribution.name,
+            fiscal_year=fiscal_year,
+            employee=self.create_employee(company).name,
+        )
+        chain = self.create_paid_sales_invoice(
+            company=company,
+            amount=10000,
+            sales_team=[{"sales_person": rep.name, "allocated_percentage": 100}],
+            return_chain=True,
+        )
+        sheet_name = frappe.db.get_value(
+            "Sales Target and Commission Sheet",
+            {"sales_person": rep.name, "quarter": "Q2"},
+            "name",
+        )
+        transaction_name = frappe.db.get_value(
+            "Commission Transaction",
+            {"sales_target_and_commission_sheet": sheet_name},
+            "name",
+        )
+
+        chain["payment_entry"].cancel()
+
+        transaction = frappe.get_doc("Commission Transaction", transaction_name)
+        sheet = frappe.get_doc("Sales Target and Commission Sheet", sheet_name)
+        self.assertEqual(transaction.transaction_status, "Superseded")
+        self.assertEqual(sheet.commission_transaction_count, 0)
+        self.assertEqual(sheet.total_actual_sales, 0)
+        self.assertEqual(sheet.invoice_history[0].invoice_status, "Unpaid")
+        self.assertEqual(sheet.total_paid_invoice_amount, 0)
+        self.assertAlmostEqual(sheet.total_unpaid_invoice_amount, 10000)
+
+    def create_paid_sales_invoice(
+        self, company, amount, sales_team, return_chain=False, pay_invoice=True
+    ):
         from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
         from ion_crm_sales.opportunity import make_quotation
         from ion_crm_sales.quotation import make_sales_order
@@ -349,6 +485,7 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
         sales_order.transaction_date = "2026-04-12"
         sales_order.delivery_date = "2026-04-30"
         sales_order.cost_center = company.cost_center
+        sales_order.custom_service_category = "Home"
         sales_order.custom_contract = self.create_active_contract(
             sales_order.customer, sales_order.name
         ).name
@@ -373,7 +510,6 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
         invoice.posting_date = "2026-04-15"
         invoice.due_date = "2026-04-30"
         invoice.set_posting_time = 1
-        invoice.custom_service_category = "Home"
         invoice.debit_to = company.default_receivable_account
         invoice.cost_center = company.cost_center
         invoice.set("sales_team", [])
@@ -384,6 +520,9 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
             item.cost_center = company.cost_center
         invoice.insert(ignore_permissions=True)
         invoice.submit()
+        if not pay_invoice:
+            invoice.reload()
+            return invoice
 
         payment = get_payment_entry("Sales Invoice", invoice.name)
         payment.posting_date = "2026-04-20"
@@ -410,6 +549,12 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
     def create_opportunity(self, company, amount):
         customer = self.create_customer()
         item = self.create_item(company)
+        currency = frappe.db.get_value("Company", company.name, "default_currency")
+        selling_price_list = frappe.db.get_value(
+            "Price List",
+            {"currency": currency, "selling": 1, "enabled": 1},
+            "name",
+        )
 
         return frappe.get_doc(
             {
@@ -421,6 +566,8 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
                 "sales_stage": "Opportunity",
                 "expected_closing": "2026-04-30",
                 "transaction_date": "2026-04-10",
+                "currency": currency,
+                "selling_price_list": selling_price_list,
                 "conversion_rate": 1.0,
                 "territory": self.first_record("Territory"),
                 "industry": self.first_record("Industry Type"),
@@ -566,6 +713,7 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
                 "default_income_account",
                 "default_cash_account",
                 "cost_center",
+                "default_currency",
             ],
         ):
             if (
@@ -577,6 +725,10 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
                 and frappe.db.exists("Account", company.default_income_account)
                 and frappe.db.exists("Account", company.default_cash_account)
                 and frappe.db.exists("Cost Center", company.cost_center)
+                and frappe.db.exists(
+                    "Price List",
+                    {"currency": company.default_currency, "selling": 1, "enabled": 1},
+                )
             ):
                 return company
         self.fail("A company with default receivable, income, cash, and cost center is required")
@@ -654,24 +806,28 @@ def create_persistent_sales_commission_cycle():
         return_chain=True,
     )
 
-    sheet = frappe.get_doc(
-        {
-            "doctype": "Sales Target and Commission Sheet",
+    sheet_names = frappe.get_all(
+        "Sales Target and Commission Sheet",
+        filters={
             "company": company.name,
             "fiscal_year": fiscal_year,
             "quarter": "Q2",
-            "remarks": "Persistent A-to-Z commission cycle scenario for tracking.",
-            "commission_lines": [
-                {"sales_person": manager.name, "department": "Sales"},
-                {"sales_person": rep.name, "department": "Sales"},
-            ],
-        }
-    ).insert(ignore_permissions=True)
-    sheet.reload()
+            "sales_person": ("in", (manager.name, rep.name)),
+        },
+        pluck="name",
+    )
+    sheet = frappe.get_doc(
+        "Sales Target and Commission Sheet",
+        frappe.db.get_value(
+            "Sales Target and Commission Sheet",
+            {"sales_person": rep.name, "quarter": "Q2"},
+            "name",
+        ),
+    )
 
     transactions = frappe.get_all(
         "Commission Transaction",
-        filters={"sales_target_and_commission_sheet": sheet.name},
+        filters={"sales_target_and_commission_sheet": ("in", sheet_names)},
         pluck="name",
     )
 
@@ -689,6 +845,7 @@ def create_persistent_sales_commission_cycle():
         "sales_invoice": chain["sales_invoice"].name,
         "payment_entry": chain["payment_entry"].name,
         "commission_sheet": sheet.name,
+        "commission_sheets": sheet_names,
         "commission_transactions": transactions,
         "sheet_total_target": sheet.total_target,
         "sheet_total_actual_sales": sheet.total_actual_sales,
@@ -912,28 +1069,28 @@ def create_persistent_commission_matrix():
         )
     )
 
-    sheet = frappe.get_doc(
-        {
-            "doctype": "Sales Target and Commission Sheet",
+    sales_people = (
+        sales_manager.name,
+        sales_rep.name,
+        ba_am.name,
+        ba_exec.name,
+        ba_ion_offer.name,
+        ba_external.name,
+    )
+    sheet_names = frappe.get_all(
+        "Sales Target and Commission Sheet",
+        filters={
             "company": company.name,
             "fiscal_year": fiscal_year,
             "quarter": "Q2",
-            "remarks": "Persistent full commission matrix scenario for tracking.",
-            "commission_lines": [
-                {"sales_person": sales_manager.name, "department": "Sales"},
-                {"sales_person": sales_rep.name, "department": "Sales"},
-                {"sales_person": ba_am.name, "department": "Business Accounts"},
-                {"sales_person": ba_exec.name, "department": "Business Accounts"},
-                {"sales_person": ba_ion_offer.name, "department": "Business Accounts"},
-                {"sales_person": ba_external.name, "department": "Business Accounts"},
-            ],
-        }
-    ).insert(ignore_permissions=True)
-    sheet.reload()
+            "sales_person": ("in", sales_people),
+        },
+        pluck="name",
+    )
 
     tx_rows = frappe.get_all(
         "Commission Transaction",
-        filters={"sales_target_and_commission_sheet": sheet.name},
+        filters={"sales_target_and_commission_sheet": ("in", sheet_names)},
         fields=[
             "name",
             "department",
@@ -960,15 +1117,12 @@ def create_persistent_commission_matrix():
             "ba_external": ba_external.name,
         },
         "scenarios": scenarios,
-        "commission_sheet": sheet.name,
+        "commission_sheets": sheet_names,
         "commission_transactions": tx_rows,
         "unsupported_transaction_types": {
             "Old": "The current ledger sync always calls detect_tx_type(..., is_renewal_flag=False), so Old cannot be produced.",
             "Renewal": "Renewal is available in DocType options but is not returned by detect_tx_type or passed by sync logic.",
         },
-        "sheet_total_target": sheet.total_target,
-        "sheet_total_actual_sales": sheet.total_actual_sales,
-        "sheet_total_commission": sheet.total_commission,
     }
 
 
@@ -1049,6 +1203,7 @@ def _create_matrix_flow(
     sales_order.transaction_date = posting_date
     sales_order.delivery_date = due_date
     sales_order.cost_center = company.cost_center
+    sales_order.custom_service_category = service_category
     sales_order.custom_contract = case.create_active_contract(
         sales_order.customer, sales_order.name
     ).name
@@ -1069,7 +1224,6 @@ def _create_matrix_flow(
     invoice.posting_date = posting_date
     invoice.due_date = due_date
     invoice.set_posting_time = 1
-    invoice.custom_service_category = service_category
     invoice.debit_to = company.default_receivable_account
     invoice.cost_center = company.cost_center
     for fieldname, value in (invoice_flags or {}).items():
@@ -1083,6 +1237,8 @@ def _create_matrix_flow(
         item.cost_center = company.cost_center
     invoice.insert(ignore_permissions=True)
     invoice.submit()
+    invoice.reload()
+    case.assertEqual(invoice.custom_service_category, service_category)
 
     payment = get_payment_entry("Sales Invoice", invoice.name)
     payment.posting_date = payment_date

@@ -56,19 +56,29 @@ doc_events = {
         "after_insert": "ion_crm_sales.ion_crm_sales.doc_events.distributor_handlers.create_sales_partner_for_distributor",
     },
     "Sales Invoice": {
-        "before_validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
+        "before_validate": [
+            "ion_crm_sales.ion_crm_sales.doc_events.sales_invoice_handlers.set_sales_invoice_source_fields",
+            "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
+        ],
         "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_invoice_handlers.validate_contract_for_source_sales_orders",
-        "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
+        "on_submit": [
+            "ion_crm_sales.ion_crm_sales.commission.triggers.create_person_sheets_for_invoice",
+            "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
+        ],
         "on_cancel": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
         "on_update_after_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
     },
     "Sales Order": {
-        "before_validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
+        "before_validate": [
+            "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.set_sales_order_source_fields",
+            "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
+        ],
         "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_insert",
         "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.validate",
     },
     "Payment Entry": {
         "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
+        "on_cancel": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
     },
     "Supplier Quotation": {
         "on_update": "ion_crm_sales.ion_crm_sales.doc_events.supplier_quotation_handlers.on_update",
@@ -124,6 +134,10 @@ fixtures = [
 after_migrate = [
     "ion_crm_sales.migration.remove_conflicting_opportunity_layout_setters",
     "ion_crm_sales.migration.remove_legacy_sales_order_contract_scripts",
+    "ion_crm_sales.migration.ensure_sales_transaction_fields",
+    "ion_crm_sales.migration.migrate_commission_sheet_sales_person",
+    "ion_crm_sales.migration.backfill_commission_invoice_history_amounts",
+    "ion_crm_sales.migration.ensure_commission_rate_settings_defaults",
 ]
 
 scheduler_events = {
@@ -181,6 +195,7 @@ doctype_js = {
     "Opportunity Tenders": "public/js/opportunity_survey.js",
     "Opportunity ISP": "public/js/opportunity_survey.js",
     "Sales Order": "public/js/sales_order_contract.js",
+    "Sales Invoice": "public/js/sales_order_contract.js",
     "Material Request": "public/js/material_request.js",
     "Delivery Note": "public/js/delivery_note.js",
 }

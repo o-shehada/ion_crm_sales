@@ -7,6 +7,18 @@ class TestAccountManagerSalesTeam(FrappeTestCase):
     def setUp(self):
         frappe.set_user("Administrator")
 
+    def test_manual_commission_limit_uses_service_category(self):
+        from ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation import (
+            get_manual_commission_limit,
+        )
+
+        doc = frappe._dict(
+            custom_opportunity_from="Dedicated",
+            custom_service_category="Hotel",
+            custom_ba_transaction_type="Old Accounts",
+        )
+        self.assertEqual(get_manual_commission_limit(doc), 1)
+
     def test_opportunity_account_manager_defaults_on_mapped_sales_order(self):
         from ion_crm_sales.opportunity import make_quotation
         from ion_crm_sales.quotation import make_sales_order
@@ -20,6 +32,8 @@ class TestAccountManagerSalesTeam(FrappeTestCase):
         quotation.submit()
 
         sales_order = make_sales_order(quotation.name)
+        self.assertEqual(quotation.custom_opportunity_from, "Dedicated")
+        self.assertEqual(sales_order.custom_opportunity_from, "Dedicated")
 
         self.assertEqual(len(sales_order.sales_team), 1)
         self.assertEqual(sales_order.sales_team[0].allocated_percentage, 100)
@@ -81,6 +95,7 @@ class TestAccountManagerSalesTeam(FrappeTestCase):
         quotation.submit()
 
         sales_order = make_sales_order(quotation.name)
+        sales_order.custom_service_category = "Dedicated"
         sales_order.db_insert()
 
         contract_name = create_contract(

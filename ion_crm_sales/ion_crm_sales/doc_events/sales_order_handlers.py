@@ -8,11 +8,19 @@ from ion_crm_sales.ion_crm_sales.doc_events.quotation_handlers import (
 
 
 def before_insert(doc, method=None):
+    set_sales_order_source_fields(doc)
     set_account_manager_sales_team(doc)
 
 
 def validate(doc, method=None):
+    set_sales_order_source_fields(doc)
     set_account_manager_sales_team(doc)
+
+def set_sales_order_source_fields(doc, method=None):
+    """Copy the source type from a linked Quotation; preserve direct-entry values."""
+    quotation = get_source_quotation(doc)
+    if quotation and not doc.get("custom_opportunity_from"):
+        doc.custom_opportunity_from = quotation.get("custom_opportunity_from")
 
 
 def set_account_manager_sales_team(doc):

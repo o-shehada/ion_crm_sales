@@ -3629,7 +3629,7 @@
   "property": "field_order",
   "property_type": "Data",
   "row_name": null,
-  "value": "[\"sales_person\", \"contact_no\", \"allocated_percentage\", \"allocated_amount\", \"commission_rate\", \"incentives\", \"custom_ion_role\"]"
+  "value": "[\"sales_person\", \"contact_no\", \"custom_manual_commission_percentage\", \"allocated_percentage\", \"allocated_amount\", \"commission_rate\", \"incentives\", \"custom_ion_role\"]"
  },
  {
   "default_value": null,

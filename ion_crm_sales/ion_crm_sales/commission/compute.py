@@ -93,12 +93,7 @@ def compute_totals_quarterly(sheet):
 
     q_start, q_end, months3 = get_quarter_window(sheet.fiscal_year, sheet.quarter)
 
-    # Sales lines (people) & their quarter targets
-    people = [
-        ln.sales_person
-        for ln in (sheet.get("commission_lines") or [])
-        if ln.department == "Sales"
-    ]
+    people = [sheet.sales_person] if sheet.get("sales_person") else []
     if not people:
         return
 
@@ -199,27 +194,7 @@ def compute_totals_quarterly(sheet):
                         per_person[sp] += above_part * rates["above"]
                     cum_exposure[sp] = prev + eq_rest_above
 
-    # Update Sales lines on the sheet
-    total_target = total_actual = total_commission = 0.0
-    for ln in (sheet.get("commission_lines") or []):
-        if ln.department != "Sales":
-            continue
-        ln.target_value = flt(target.get(ln.sales_person) or 0.0)
-        ln.actual_sales = flt(actual_basis.get(ln.sales_person) or 0.0)
-        ln.achievement_pct = (
-            round((ln.actual_sales / ln.target_value * 100.0), 2) if ln.target_value else 0.0
-        )
-        ln.commission_value = flt(per_person.get(ln.sales_person) or 0.0)
-        ln.commission_rate = (
-            round((ln.commission_value / ln.actual_sales * 100.0), 2)
-            if ln.actual_sales
-            else 0.0
-        )
-
-        total_target     += flt(ln.target_value)
-        total_actual     += flt(ln.actual_sales)
-        total_commission += flt(ln.commission_value)
-
-    sheet.total_target = round(total_target, 2)
-    sheet.total_actual_sales = round(total_actual, 2)
-    sheet.total_commission = round(total_commission, 2)
+    sales_person = sheet.sales_person
+    sheet.total_target = round(flt(target.get(sales_person)), 2)
+    sheet.total_actual_sales = round(flt(actual_basis.get(sales_person)), 2)
+    sheet.total_commission = round(flt(per_person.get(sales_person)), 2)

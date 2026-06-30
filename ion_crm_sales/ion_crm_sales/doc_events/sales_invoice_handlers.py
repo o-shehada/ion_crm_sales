@@ -9,6 +9,35 @@ COMMISSION_MODIFIERS = {
 }
 
 
+def set_sales_invoice_source_fields(doc, method=None):
+    """Copy commission routing fields from the linked Sales Order."""
+    for item in doc.get("items") or []:
+        sales_order = item.get("sales_order")
+        if not sales_order and item.get("prevdoc_doctype") == "Sales Order":
+            sales_order = item.get("prevdoc_docname")
+        if not sales_order:
+            continue
+
+        source = frappe.db.get_value(
+            "Sales Order",
+            sales_order,
+            [
+                "custom_opportunity_from",
+                "custom_service_category",
+                "custom_ba_transaction_type",
+            ],
+            as_dict=True,
+        )
+        if not source:
+            continue
+        if not doc.get("custom_opportunity_from"):
+            doc.custom_opportunity_from = source.custom_opportunity_from
+        if source.custom_service_category:
+            doc.custom_service_category = source.custom_service_category
+        if not doc.get("custom_ba_transaction_type"):
+            doc.custom_ba_transaction_type = source.custom_ba_transaction_type
+        return
+
 def validate_contract_for_source_sales_orders(doc, method=None):
 	sales_orders = set()
 	for item in doc.get("items", []):

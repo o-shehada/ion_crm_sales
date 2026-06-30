@@ -403,12 +403,7 @@ def compute_ba_for_sheet(sheet, include_actuals: bool = False):
 
     q_start, q_end, months3 = get_quarter_window(sheet.fiscal_year, sheet.quarter)
 
-    # Lines → people
-    people = [
-        ln.sales_person
-        for ln in (sheet.get("commission_lines") or [])
-        if ln.department == "Business Accounts"
-    ]
+    people = [sheet.sales_person] if sheet.get("sales_person") else []
 
     # Quarter targets per person
     quarter_target = {

@@ -6,15 +6,14 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "commission_lines",
   "section_break_tbau",
   "company",
+  "sales_person",
   "fiscal_year",
   "quarter",
   "status",
   "total_target",
-  "total_actual_sales",
-  "total_commission",
+  "achievement_pct",
   "column_break_dnnb",
   "accrual_posted_amount",
   "accrual_je",
@@ -22,6 +21,17 @@
   "transaction_sync_status",
   "commission_transaction_count",
   "source_of_totals",
+  "section_break_kjul",
+  "invoice_history",
+  "section_break_esss",
+  "total_actual_sales",
+  "total_paid_invoice_amount",
+  "total_unpaid_invoice_amount",
+  "column_break_rfjc",
+  "total_commission",
+  "total_paid_invoices",
+  "total_unpaid_invoices",
+  "commission_rate",
   "section_break_dxlr",
   "remarks",
   "amended_from"
@@ -69,13 +79,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "commission_lines",
-   "fieldtype": "Table",
-   "label": "Commission Lines",
-   "options": "Commission Lines",
-   "reqd": 1
-  },
-  {
    "allow_on_submit": 1,
    "fieldname": "total_target",
    "fieldtype": "Currency",
@@ -84,10 +87,17 @@
   },
   {
    "allow_on_submit": 1,
+   "fieldname": "achievement_pct",
+   "fieldtype": "Percent",
+   "hidden": 1,
+   "label": "Achievement Pct",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
    "fieldname": "total_actual_sales",
    "fieldtype": "Currency",
-   "hidden": 1,
-   "label": "Total Actual Sales",
+   "label": "Total Eligible Invoice Amount",
    "read_only": 1
   },
   {
@@ -95,6 +105,15 @@
    "fieldname": "total_commission",
    "fieldtype": "Currency",
    "label": "Total Commission",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "commission_rate",
+   "fieldtype": "Percent",
+   "hidden": 1,
+   "label": "Effective Commission Rate",
+   "precision": "6",
    "read_only": 1
   },
   {
@@ -130,37 +149,102 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "last_transaction_sync_on",
    "fieldtype": "Datetime",
-   "label": "Last Transaction Sync On"
+   "label": "Last Transaction Sync On",
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "transaction_sync_status",
    "fieldtype": "Select",
    "label": "Transaction Sync Status",
-   "options": "\nNot Synced\nSynced\nNeeds Rebuild"
+   "options": "\nNot Synced\nSynced\nNeeds Rebuild",
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "commission_transaction_count",
    "fieldtype": "Int",
-   "label": "Commission Transaction Count"
+   "label": "Commission Transaction Count",
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "source_of_totals",
    "fieldtype": "Select",
    "label": "Source of Totals",
-   "options": "\nComputed Live\nCommission Transactions"
+   "options": "\nComputed Live\nCommission Transactions",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_dxlr",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales Person",
+   "options": "Sales Person",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "invoice_history",
+   "fieldtype": "Table",
+   "label": "Sales Invoice History",
+   "options": "Sales Invoice Commission History",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_paid_invoice_amount",
+   "fieldtype": "Currency",
+   "label": "Total Paid Invoices",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_unpaid_invoice_amount",
+   "fieldtype": "Currency",
+   "label": "Total Unpaid Invoices",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_paid_invoices",
+   "fieldtype": "Currency",
+   "label": "Total Paid Invoice Commissions",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_unpaid_invoices",
+   "fieldtype": "Currency",
+   "label": "Total Unpaid Invoice Commissions",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_kjul",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_esss",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_rfjc",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-23 10:02:11.845549",
+ "modified": "2026-06-30 08:41:00.341889",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Sales Target and Commission Sheet",

@@ -52,29 +52,42 @@ ACTIVE_TRANSACTION_STATUSES = ("Draft", "Posted")
 def sync_sheet_transactions(sheet):
 	"""Create/update draft commission transactions for the sheet window."""
 	q_start, q_end, months3 = get_quarter_window(sheet.fiscal_year, sheet.quarter)
-	targets = _targets_by_department(sheet, months3)
+	sales_person = sheet.get("sales_person")
+	if not sales_person:
+		frappe.throw("Sales Person is required on the commission sheet.")
+	target = {
+		sales_person: quarter_target_from_distribution(
+			sales_person, sheet.fiscal_year, months3
+		)
+	}
 	seen = set()
 
-	seen.update(_sync_sales_transactions(sheet, q_start, q_end, targets.get("Sales", {})))
-	seen.update(
-		_sync_ba_transactions(sheet, q_start, q_end, targets.get("Business Accounts", {}))
-	)
+	seen.update(_sync_sales_transactions(sheet, q_start, q_end, target))
+	seen.update(_sync_ba_transactions(sheet, q_start, q_end, target))
 
 	_mark_stale_transactions(sheet, seen)
-	aggregate_sheet_from_transactions(sheet, targets)
+	aggregate_sheet_from_transactions(sheet, target)
 	sheet.last_transaction_sync_on = now_datetime()
 	sheet.transaction_sync_status = "Synced"
 	sheet.source_of_totals = "Commission Transactions"
+	from .triggers import sync_invoice_history
+
+	sync_invoice_history(sheet)
 
 
-def aggregate_sheet_from_transactions(sheet, targets=None):
-	"""Summarize active commission transaction lines into sheet commission lines."""
-	if targets is None:
+def aggregate_sheet_from_transactions(sheet, target=None):
+	"""Summarize active transactions into a one-person quarterly sheet."""
+	if target is None:
 		_q_start, _q_end, months3 = get_quarter_window(sheet.fiscal_year, sheet.quarter)
-		targets = _targets_by_department(sheet, months3)
+		target = {
+			sheet.sales_person: quarter_target_from_distribution(
+				sheet.sales_person, sheet.fiscal_year, months3
+			)
+		}
 
-	actual_by_person = {}
-	commission_by_person = {}
+	sales_person = sheet.sales_person
+	total_commission = 0.0
+	invoice_names = set()
 	transaction_count = 0
 
 	for tx in frappe.get_all(
@@ -87,50 +100,28 @@ def aggregate_sheet_from_transactions(sheet, targets=None):
 	):
 		transaction_count += 1
 		doc = frappe.get_doc("Commission Transaction", tx)
+		if doc.sales_invoice:
+			invoice_names.add(doc.sales_invoice)
 		for line in doc.get("lines") or []:
-			sp = line.get("sales_person")
-			if not sp:
+			if line.get("sales_person") != sales_person:
 				continue
-			if line.get("commission_component") == "Base":
-				actual_by_person[sp] = actual_by_person.get(sp, 0.0) + flt(line.get("basis_amount"))
-			commission_by_person[sp] = commission_by_person.get(sp, 0.0) + flt(
-				line.get("commission_amount")
-			)
+			total_commission += flt(line.get("commission_amount"))
 
-	total_target = total_actual = total_commission = 0.0
-	for line in sheet.get("commission_lines") or []:
-		line.target_value = flt((targets.get(line.department) or {}).get(line.sales_person))
-		line.actual_sales = flt(actual_by_person.get(line.sales_person))
-		line.achievement_pct = (
-			round(line.actual_sales / line.target_value * 100.0, 2)
-			if line.target_value
-			else 0.0
-		)
-		line.commission_value = flt(commission_by_person.get(line.sales_person))
-		line.commission_rate = (
-			round(line.commission_value / line.actual_sales * 100.0, 2)
-			if line.actual_sales
-			else 0.0
-		)
-		total_target += flt(line.target_value)
-		total_actual += flt(line.actual_sales)
-		total_commission += flt(line.commission_value)
-
+	total_actual = sum(
+		flt(frappe.db.get_value("Sales Invoice", invoice_name, "base_net_total"))
+		for invoice_name in invoice_names
+	)
+	total_target = flt(target.get(sales_person))
 	sheet.total_target = round(total_target, 2)
 	sheet.total_actual_sales = round(total_actual, 2)
 	sheet.total_commission = round(total_commission, 2)
+	sheet.achievement_pct = (
+		round(total_actual / total_target * 100.0, 2) if total_target else 0.0
+	)
+	sheet.commission_rate = (
+		round(total_commission / total_actual * 100.0, 6) if total_actual else 0.0
+	)
 	sheet.commission_transaction_count = transaction_count
-
-
-def _targets_by_department(sheet, months3):
-	targets = {"Sales": {}, "Business Accounts": {}}
-	for line in sheet.get("commission_lines") or []:
-		if line.department not in targets:
-			continue
-		targets[line.department][line.sales_person] = quarter_target_from_distribution(
-			line.sales_person, sheet.fiscal_year, months3
-		)
-	return targets
 
 
 def _sync_sales_transactions(sheet, q_start, q_end, target):
@@ -150,31 +141,33 @@ def _sync_sales_transactions(sheet, q_start, q_end, target):
 		si = frappe.get_doc("Sales Invoice", si_name)
 		lines = []
 		cat_amounts = _sales_category_amounts_for_si(si)
-		mgrs = _people_on_sheet(_managers_on_si(si), people)
-		rest = _people_on_sheet(_rest_on_si(si), people)
+		all_mgrs = _managers_on_si(si)
+		all_rest = _rest_on_si(si)
+		mgrs = _people_on_sheet(all_mgrs, people)
+		rest = _people_on_sheet(all_rest, people)
 
 		for cat, amount in cat_amounts.items():
 			rates = SALES_RATES[cat]
 			splits = SALES_SPLITS[cat]
 
-			if mgrs:
-				base_basis = amount * splits["normal"]["manager"] / len(mgrs)
-				above_basis = amount * splits["above"]["manager"] / len(mgrs)
+			if all_mgrs:
+				base_basis = amount * splits["normal"]["manager"] / len(all_mgrs)
+				above_basis = amount * splits["above"]["manager"] / len(all_mgrs)
 				for sp in mgrs:
-					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(mgrs))
+					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(all_mgrs))
 					_add_above_line(lines, si, sp, "Sales", cat, above_basis, rates["above"], target, cum_exposure)
-			elif rest:
-				base_basis = amount * splits["normal"]["manager"] / len(rest)
-				above_basis = amount * splits["above"]["manager"] / len(rest)
+			elif all_rest:
+				base_basis = amount * splits["normal"]["manager"] / len(all_rest)
+				above_basis = amount * splits["above"]["manager"] / len(all_rest)
 				for sp in rest:
-					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(rest))
+					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(all_rest))
 					_add_above_line(lines, si, sp, "Sales", cat, above_basis, rates["above"], target, cum_exposure)
 
-			if rest:
-				base_basis = amount * splits["normal"]["rest"] / len(rest)
-				above_basis = amount * splits["above"]["rest"] / len(rest)
+			if all_rest:
+				base_basis = amount * splits["normal"]["rest"] / len(all_rest)
+				above_basis = amount * splits["above"]["rest"] / len(all_rest)
 				for sp in rest:
-					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(rest))
+					_add_base_line(lines, si, sp, "Sales", cat, base_basis, rates["normal"], len(all_rest))
 					_add_above_line(lines, si, sp, "Sales", cat, above_basis, rates["above"], target, cum_exposure)
 
 		if lines:
@@ -215,14 +208,13 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 		for cat_key, amount in cat_amounts.items():
 			if amount <= 0:
 				continue
-			recipients = _people_on_sheet(
-				_ba_recipients_for_category(si, cat_key, externals_ok), people
-			)
-			allocs = _allocation_fractions_on_si(si, recipients)
-			if not allocs:
+			all_recipients = _ba_recipients_for_category(si, cat_key, externals_ok)
+			allocs = _allocation_fractions_on_si(si, all_recipients)
+			sheet_allocs = {sp: fraction for sp, fraction in allocs.items() if sp in people}
+			if not sheet_allocs:
 				continue
 
-			for sp, fraction in allocs.items():
+			for sp, fraction in sheet_allocs.items():
 				basis = amount * fraction
 				if cat_key == "ION_SOLUTIONS":
 					role = _ion_role_for_person_on_si(si, sp)
@@ -238,7 +230,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 						cat_key,
 						basis,
 						base_rate,
-						len(recipients),
+						len(all_recipients),
 						split_percentage=allocs.get(sp, 0.0) * 100.0,
 						tx_type=tx_type,
 						ion_role=role,
@@ -258,8 +250,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 								cumulative_before=cum_exposure[sp],
 								cumulative_after=cum_exposure[sp] + basis,
 								above_target_amount=basis,
-								split_count=len(recipients),
-								ion_role=role,
+								split_count=len(all_recipients),
 							)
 						)
 					cum_exposure[sp] += basis
@@ -274,7 +265,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 						cat_key,
 						basis,
 						base_rate,
-						len(recipients),
+						len(all_recipients),
 						split_percentage=allocs.get(sp, 0.0) * 100.0,
 						tx_type=tx_type,
 					)
@@ -295,9 +286,10 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 			si.get("custom_first_year_contract_invoice")
 			or getattr(si, "first_year_contract_invoice", None)
 		):
-			non_mgr = _people_on_sheet(_non_am_sm_employees_on_si(si), people)
-			if non_mgr:
-				commission = flt(si.base_grand_total) * FIRST_YEAR_ADDON_RATE / len(non_mgr)
+			all_non_mgr = _non_am_sm_employees_on_si(si)
+			non_mgr = _people_on_sheet(all_non_mgr, people)
+			if non_mgr and all_non_mgr:
+				commission = flt(si.base_grand_total) * FIRST_YEAR_ADDON_RATE / len(all_non_mgr)
 				for sp in non_mgr:
 					lines.append(
 						_line(
@@ -310,7 +302,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 							FIRST_YEAR_ADDON_RATE,
 							commission,
 							tx_type=tx_type,
-							split_count=len(non_mgr),
+							split_count=len(all_non_mgr),
 						)
 					)
 
@@ -319,9 +311,10 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 			or getattr(si, "ba_project_acquisition_bonus", None)
 		):
 			has_bonus_category = bool(cat_amounts.get("HOTSPOT") or cat_amounts.get("ULTRA_MALLS"))
-			employees = _people_on_sheet(_employees_on_si(si), people)
-			if has_bonus_category and employees:
-				commission = PROJECT_ACQ_BONUS / len(employees)
+			all_employees = _employees_on_si(si)
+			employees = _people_on_sheet(all_employees, people)
+			if has_bonus_category and employees and all_employees:
+				commission = PROJECT_ACQ_BONUS / len(all_employees)
 				for sp in employees:
 					lines.append(
 						_line(
@@ -334,7 +327,7 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 							0,
 							commission,
 							tx_type=tx_type,
-							split_count=len(employees),
+							split_count=len(all_employees),
 						)
 					)
 
@@ -356,19 +349,22 @@ def _sync_ba_transactions(sheet, q_start, q_end, target):
 def _add_ba_penalty_lines(
 	lines, si, paid_on, tx_type, cat_amounts, externals_ok, factor, target, prev_cum_before, people
 ):
-	ams = _people_on_sheet(_ams_on_si(si), people)
-	if not ams:
+	all_ams = _ams_on_si(si)
+	ams = _people_on_sheet(all_ams, people)
+	if not ams or not all_ams:
 		return
 
 	am_subtotal = 0.0
 	for cat_key, amount in cat_amounts.items():
 		if amount <= 0:
 			continue
-		recipients = _people_on_sheet(_ba_recipients_for_category(si, cat_key, externals_ok), ams)
-		allocs = _allocation_fractions_on_si(si, recipients)
+		all_recipients = _ba_recipients_for_category(si, cat_key, externals_ok)
+		allocs = _allocation_fractions_on_si(si, all_recipients)
 		if not allocs:
 			continue
 		for sp, fraction in allocs.items():
+			if sp not in all_ams:
+				continue
 			basis = amount * fraction
 			if cat_key == "ION_SOLUTIONS":
 				role = _ion_role_for_person_on_si(si, sp)
@@ -399,7 +395,7 @@ def _add_ba_penalty_lines(
 				"Penalty",
 				0,
 				0,
-				-(reduction / len(ams)),
+				-(reduction / len(all_ams)),
 				tx_type=tx_type,
 				penalty_factor=factor,
 				remarks=f"Penalty based on fully paid date {paid_on}",
@@ -506,38 +502,62 @@ def _line(
 def _upsert_transaction(sheet, si, paid_on, department, tx_type, lines, source_key):
 	total_commission = sum(flt(line.get("commission_amount")) for line in lines)
 	eligible_amount = sum(flt(line.get("basis_amount")) for line in lines if line.get("commission_component") == "Base")
-	payload_hash = _calculation_hash(lines)
 
 	name = frappe.db.get_value("Commission Transaction", {"source_key": source_key}, "name")
 	doc = frappe.get_doc("Commission Transaction", name) if name else frappe.new_doc("Commission Transaction")
-	doc.update(
-		{
-			"company": sheet.company,
-			"fiscal_year": sheet.fiscal_year,
-			"quarter": sheet.quarter,
-			"department": department,
-			"sales_target_and_commission_sheet": sheet.name,
-			"sales_invoice": si.name,
-			"customer": si.customer,
-			"posting_date": si.posting_date,
-			"fully_paid_on": getdate(paid_on),
-			"transaction_status": "Draft",
-			"transaction_kind": "Original",
-			"transaction_type": tx_type,
-			"eligible_amount": eligible_amount,
-			"actual_basis_amount": eligible_amount,
-			"total_commission": total_commission,
-			"calculation_version": CALCULATION_VERSION,
-			"calculation_hash": payload_hash,
-			"source_key": source_key,
-			"is_backfill": 0,
-		}
+	transaction_status = (
+		doc.transaction_status if name and doc.transaction_status == "Posted" else "Draft"
 	)
-	_set_if_field_exists(doc, "invoice", si.name)
-	_set_if_field_exists(doc, "invoice_status", si.status)
-	_set_if_field_exists(doc, "commission_status", "Unpaid")
-	_set_if_field_exists(doc, "amount", total_commission)
-	_set_if_field_exists(doc, "date", getdate(paid_on))
+	payload = {
+		"company": sheet.company,
+		"fiscal_year": sheet.fiscal_year,
+		"quarter": sheet.quarter,
+		"department": department,
+		"sales_target_and_commission_sheet": sheet.name,
+		"sales_invoice": si.name,
+		"customer": si.customer,
+		"posting_date": si.posting_date,
+		"fully_paid_on": getdate(paid_on),
+		"transaction_status": transaction_status,
+		"transaction_kind": "Original",
+		"transaction_type": tx_type,
+		"eligible_amount": eligible_amount,
+		"actual_basis_amount": eligible_amount,
+		"total_commission": total_commission,
+		"calculation_version": CALCULATION_VERSION,
+		"source_key": source_key,
+		"is_backfill": 0,
+	}
+	optional_payload = {
+		"invoice": si.name,
+		"invoice_status": si.status,
+		"commission_status": "Unpaid",
+		"amount": total_commission,
+		"date": getdate(paid_on),
+	}
+	optional_payload = {
+		fieldname: value
+		for fieldname, value in optional_payload.items()
+		if doc.meta.has_field(fieldname)
+	}
+	payload_hash = _calculation_hash(lines)
+
+	if (
+		name
+		and doc.calculation_hash == payload_hash
+		and _payload_matches(doc, payload)
+		and _payload_matches(doc, optional_payload)
+	):
+		return
+	if name and doc.transaction_status == "Posted":
+		frappe.throw(
+			f"Posted Commission Transaction {doc.name} cannot be changed; "
+			"create a correction transaction instead."
+		)
+
+	payload["calculation_hash"] = payload_hash
+	doc.update(payload)
+	doc.update(optional_payload)
 	doc.set("lines", [])
 	for line in lines:
 		doc.append("lines", line)
@@ -571,6 +591,10 @@ def _source_key(sheet, department, invoice):
 def _calculation_hash(lines):
 	payload = json.dumps(lines, sort_keys=True, default=str)
 	return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _payload_matches(doc, payload):
+	return all(doc.get(fieldname) == value for fieldname, value in payload.items())
 
 
 def _people_on_sheet(people, allowed):

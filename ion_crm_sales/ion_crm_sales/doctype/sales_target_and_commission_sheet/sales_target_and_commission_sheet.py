@@ -23,6 +23,7 @@ ALLOWED_STATES = {"Draft", "Submitted", "Approved"}
 class SalesTargetandCommissionSheet(Document):
     def validate(self):
         ensure_quarter_on(self)
+        self._validate_one_sheet_per_sales_person()
         if self.is_new():
             return
         sync_sheet_transactions(self)
@@ -30,20 +31,18 @@ class SalesTargetandCommissionSheet(Document):
     def after_insert(self):
         sync_sheet_transactions(self)
         self.db_update()
-        for line in self.get("commission_lines") or []:
-            line.db_update()
+        for row in self.get("invoice_history") or []:
+            if row.is_new():
+                row.db_insert()
+            else:
+                row.db_update()
 
     def before_submit(self):
-        if not self.get("commission_lines"):
-            frappe.throw("Add at least one commission line.")
-
-        # Ensure every line has a quarter target (Sales/BA)
-        for ln in (self.get("commission_lines") or []):
-            if not flt(ln.target_value):
-                frappe.throw(
-                    f"Missing quarter target for {ln.sales_person} in {ln.department}. "
-                    f"Make sure Sales Person Targets are entered and have a Monthly Distribution."
-                )
+        if not flt(self.total_target):
+            frappe.throw(
+                f"Missing quarter target for {self.sales_person}. "
+                "Make sure Sales Person Targets are entered and have a Monthly Distribution."
+            )
 
     def before_save(self):
         if self._should_post_accrual_from_workflow():
@@ -60,6 +59,28 @@ class SalesTargetandCommissionSheet(Document):
             sync_sheet_transactions(self)
 
     # ---------- helpers ---------- #
+
+    def _validate_one_sheet_per_sales_person(self):
+        if not self.sales_person:
+            return
+
+        duplicate = frappe.db.get_value(
+            "Sales Target and Commission Sheet",
+            {
+                "company": self.company,
+                "fiscal_year": self.fiscal_year,
+                "quarter": self.quarter,
+                "sales_person": self.sales_person,
+                "docstatus": ("<", 2),
+                "name": ("!=", self.name or ""),
+            },
+            "name",
+        )
+        if duplicate:
+            frappe.throw(
+                f"Commission sheet {duplicate} already exists for "
+                f"{self.sales_person} in {self.fiscal_year} {self.quarter}."
+            )
 
     def _should_post_accrual_from_workflow(self):
         if self.docstatus != 1 or self.status != "Posted" or self.accrual_je:
