@@ -29,16 +29,30 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
             company=company,
             amount=20000,
             sales_team=[
-                {"sales_person": manager.name, "allocated_percentage": 30},
-                {"sales_person": rep.name, "allocated_percentage": 70},
+                {
+                    "sales_person": manager.name,
+                    "custom_manual_commission_percentage": 1,
+                    "allocated_percentage": 30,
+                },
+                {
+                    "sales_person": rep.name,
+                    "custom_manual_commission_percentage": 2,
+                    "allocated_percentage": 70,
+                },
             ],
         )
         self.assertEqual(invoice.custom_opportunity_from, "Dedicated")
         self.assertEqual(invoice.custom_service_category, "Home")
 
-        for sales_person, expected_target, expected_basis, expected_commission in (
-            (manager.name, 5000, 6000, 6),
-            (rep.name, 10000, 14000, 19),
+        for (
+            sales_person,
+            expected_target,
+            expected_basis,
+            expected_rate,
+            expected_commission,
+        ) in (
+            (manager.name, 5000, 6000, 1, 6),
+            (rep.name, 10000, 14000, 2, 19),
         ):
             auto_sheet_name = frappe.db.get_value(
                 "Sales Target and Commission Sheet",
@@ -59,6 +73,10 @@ class TestSalesTargetandCommissionSheet(FrappeTestCase):
             self.assertEqual(auto_sheet.invoice_history[0].sales_invoice, invoice.name)
             self.assertEqual(auto_sheet.invoice_history[0].invoice_status, "Paid")
             self.assertAlmostEqual(auto_sheet.invoice_history[0].invoice_amount, 20000)
+            self.assertAlmostEqual(
+                auto_sheet.invoice_history[0].commission_rate,
+                expected_rate,
+            )
             self.assertAlmostEqual(
                 auto_sheet.invoice_history[0].commission_amount,
                 expected_commission,

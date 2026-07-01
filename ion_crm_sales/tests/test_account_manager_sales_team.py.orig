@@ -19,27 +19,6 @@ class TestAccountManagerSalesTeam(FrappeTestCase):
         )
         self.assertEqual(get_manual_commission_limit(doc), 1)
 
-    def test_single_sales_team_row_defaults_to_scenario_commission_limit(self):
-        from ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation import (
-            normalize_sales_team_allocation_for_sales_categories,
-        )
-
-        row = frappe._dict(
-            custom_manual_commission_percentage=0,
-            allocated_percentage=0,
-        )
-        doc = frappe._dict(
-            custom_service_category="Hotel",
-            custom_ba_transaction_type="Lead Acquisition",
-            sales_team=[row],
-            items=[],
-        )
-
-        normalize_sales_team_allocation_for_sales_categories(doc)
-
-        self.assertEqual(row.custom_manual_commission_percentage, 5)
-        self.assertEqual(row.allocated_percentage, 100)
-
     def test_opportunity_account_manager_defaults_on_mapped_sales_order(self):
         from ion_crm_sales.opportunity import make_quotation
         from ion_crm_sales.quotation import make_sales_order

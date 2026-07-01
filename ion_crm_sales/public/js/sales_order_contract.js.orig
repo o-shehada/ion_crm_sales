@@ -27,12 +27,10 @@ frappe.ui.form.on("Sales Order", {
 
     custom_service_category(frm) {
         update_manual_commission_limit_description(frm);
-        set_single_sales_team_manual_commission(frm);
     },
 
     custom_ba_transaction_type(frm) {
         update_manual_commission_limit_description(frm);
-        set_single_sales_team_manual_commission(frm);
     },
 
     validate(frm) {
@@ -47,12 +45,10 @@ frappe.ui.form.on("Sales Invoice", {
 
     custom_service_category(frm) {
         update_manual_commission_limit_description(frm);
-        set_single_sales_team_manual_commission(frm);
     },
 
     custom_ba_transaction_type(frm) {
         update_manual_commission_limit_description(frm);
-        set_single_sales_team_manual_commission(frm);
     },
 
     validate(frm) {
@@ -172,29 +168,6 @@ function get_manual_commission_limit(frm) {
         return null;
     }
     return rates[frm.doc.custom_ba_transaction_type] ?? null;
-}
-
-function set_single_sales_team_manual_commission(frm) {
-    const rows = frm.doc.sales_team || [];
-    const limit = get_manual_commission_limit(frm);
-
-    if (rows.length !== 1 || limit === null) {
-        return;
-    }
-
-    const row = rows[0];
-    if (flt(row.custom_manual_commission_percentage) === limit) {
-        return;
-    }
-
-    frappe.model
-        .set_value(
-            row.doctype,
-            row.name,
-            "custom_manual_commission_percentage",
-            limit,
-        )
-        .then(() => update_manual_sales_team_allocation(frm));
 }
 
 function validate_manual_commission_total(frm) {

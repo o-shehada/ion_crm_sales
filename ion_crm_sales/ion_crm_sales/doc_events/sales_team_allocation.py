@@ -25,6 +25,7 @@ def normalize_sales_team_allocation_for_sales_categories(doc, method=None):
     if not rows:
         return
 
+    _set_single_row_manual_commission_if_empty(doc, rows)
     manual_rates = [flt(row.get("custom_manual_commission_percentage")) for row in rows]
     if any(rate < 0 for rate in manual_rates):
         frappe.throw("Manual Commission (%) cannot be negative.")
@@ -67,6 +68,16 @@ def get_manual_commission_limit(doc):
     if transaction_key == "new":
         return round((rates["new"] + rates["upsell"]) * 100.0, 6)
     return round(rates[transaction_key] * 100.0, 6)
+
+
+def _set_single_row_manual_commission_if_empty(doc, rows):
+    """Apply the scenario maximum for API-created documents as well as the form."""
+    if len(rows) != 1 or flt(rows[0].get("custom_manual_commission_percentage")):
+        return
+
+    limit = get_manual_commission_limit(doc)
+    if limit is not None:
+        rows[0].custom_manual_commission_percentage = limit
 
 
 def _set_normalized_allocations(rows, weights, total):

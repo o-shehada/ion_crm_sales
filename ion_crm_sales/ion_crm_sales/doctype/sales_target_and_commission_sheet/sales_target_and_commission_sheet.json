@@ -97,6 +97,7 @@
    "allow_on_submit": 1,
    "fieldname": "total_actual_sales",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Total Eligible Invoice Amount",
    "read_only": 1
   },
@@ -104,6 +105,7 @@
    "allow_on_submit": 1,
    "fieldname": "total_commission",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Total Commission",
    "read_only": 1
   },
@@ -244,7 +246,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-30 08:41:00.341889",
+ "modified": "2026-06-30 10:11:02.205062",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Sales Target and Commission Sheet",
