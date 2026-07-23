@@ -15,6 +15,7 @@
   "type",
   "quote",
   "reseller_type",
+  "territory",
   "voucher_type_section",
   "electronic",
   "column_break_xjbk",
@@ -28,6 +29,7 @@
   "hotspot_name_arabic",
   "section_break_grif",
   "attachment",
+  "surveyor_manager",
   "presales",
   "request",
   "requirements",
@@ -55,11 +57,17 @@
   "company",
   "material",
   "survey_tab",
+  "section_break_dulw",
   "surveyor",
   "column_break_tmwd",
   "technical_survey",
   "survey_attachment",
+  "section_break_lxet",
+  "surveyor_table",
   "technical_tab",
+  "technical_survey_template_table",
+  "technical_data_tab",
+  "section_break_ktzq",
   "stock_entry",
   "materials_received",
   "column_break_pedw",
@@ -125,6 +133,7 @@
   {
    "fieldname": "requirements",
    "fieldtype": "Text Editor",
+   "hidden": 1,
    "label": "Requirements"
   },
   {
@@ -558,12 +567,54 @@
   {
    "fieldname": "column_break_xjbk",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_dulw",
+   "fieldtype": "Section Break",
+   "hidden": 1
+  },
+  {
+   "fieldname": "section_break_lxet",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "surveyor_table",
+   "fieldtype": "Table",
+   "label": "Surveyor Table",
+   "options": "Technical Surveyor"
+  },
+  {
+   "fieldname": "technical_survey_template_table",
+   "fieldtype": "Table",
+   "label": "Technical Survey Template Table",
+   "options": "Technical Survey Template Table"
+  },
+  {
+   "fieldname": "section_break_ktzq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "technical_data_tab",
+   "fieldtype": "Tab Break",
+   "label": "Technical Data"
+  },
+  {
+   "fieldname": "territory",
+   "fieldtype": "Link",
+   "label": "Territory",
+   "options": "Territory"
+  },
+  {
+   "fieldname": "surveyor_manager",
+   "fieldtype": "Link",
+   "label": "Surveyor Manager",
+   "options": "User"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-15 11:25:38.196292",
+ "modified": "2026-07-07 21:51:50.716271",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Hotspot",

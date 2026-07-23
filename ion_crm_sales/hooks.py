@@ -24,6 +24,9 @@ doc_events = {
         ],
         "validate": "ion_crm_sales.ion_crm_sales.doc_events.opportunity_handlers.validate",
     },
+    "Customer": {
+        "validate": "ion_crm_sales.ion_crm_sales.doc_events.customer_handlers.validate",
+    },
     "Opportunity SM": {
         "before_save": [
             "ion_crm_sales.ion_crm_sales.doc_events.opportunity_handlers.before_save",
@@ -49,7 +52,10 @@ doc_events = {
         ]
     },
     "Hotspot": {
-        "before_save": "ion_crm_sales.ion_crm_sales.doc_events.hotspot_handlers.before_save"
+        "before_save": [
+            "ion_crm_sales.ion_crm_sales.doc_events.hotspot_handlers.before_save",
+            "ion_crm_sales.ion_crm_sales.doc_events.survey_notifications.on_before_save",
+        ]
     },
     "Distributor": {
         "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.distributor_handlers.before_insert",
@@ -75,6 +81,7 @@ doc_events = {
         ],
         "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_insert",
         "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.validate",
+        "before_submit": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_submit",
     },
     "Payment Entry": {
         "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
@@ -91,6 +98,25 @@ doc_events = {
         "after_insert": "ion_crm_sales.ion_support.support.notifications.new_issue_notification",
         "on_update": "ion_crm_sales.ion_support.support.notifications.issue_status_update",
     },
+    "Contract": {
+        "autoname": "ion_crm_sales.contract.set_contract_name",
+    },
+}
+
+permission_query_conditions = {
+    "Opportunity": "ion_crm_sales.opportunity_permissions.get_permission_query_conditions",
+    "Opportunity Hotels": "ion_crm_sales.opportunity_permissions.get_permission_query_conditions",
+    "Opportunity SM": "ion_crm_sales.opportunity_permissions.get_permission_query_conditions",
+    "Opportunity ISP": "ion_crm_sales.opportunity_permissions.get_permission_query_conditions",
+    "Opportunity Tenders": "ion_crm_sales.opportunity_permissions.get_permission_query_conditions",
+}
+
+has_permission = {
+    "Opportunity": "ion_crm_sales.opportunity_permissions.has_permission",
+    "Opportunity Hotels": "ion_crm_sales.opportunity_permissions.has_permission",
+    "Opportunity SM": "ion_crm_sales.opportunity_permissions.has_permission",
+    "Opportunity ISP": "ion_crm_sales.opportunity_permissions.has_permission",
+    "Opportunity Tenders": "ion_crm_sales.opportunity_permissions.has_permission",
 }
 
 fixtures = [
@@ -99,36 +125,19 @@ fixtures = [
     "Number Card",
     "Report",
     "Gender",
-    "Workflow",
-    "Workflow State",
-    "Workflow Action Master",
-    {
-        "dt": "Custom Field",
-        "filters": [
-            ["module", "=", "Ion Crm Sales"],
-            [
-                "dt",
-                "not in",
-                [
-                    "Opportunity",
-                    "Opportunity Tender",
-                    "Opportunity SM",
-                    "Opportunity Hotels",
-                    "Opportunity Item",
-                ],
-            ],
-        ],
-    },
-    "Property Setter",
     "Print Format",
     "Role",
     "Role Profile",
     "Opportunity Type",
     {"dt": "Dashboard Chart", "filters": [["is_standard", "=", 0]]},
-    # {"doctype": "DocType", "filters": {"module": ["=", "Ion Crm Sales"]}},
-    # {"doctype": "Workflow",
-    #  "filters": {"document_type": ["=", "Sales Target and Commission Sheet"]}},
-    # {"doctype": "Report", "filters": {"module": ["=", "Ion Crm Sales"]}}
+    {
+        "dt": "Custom DocPerm",
+        "filters": [
+            ["parent", "in", [
+                "Opportunity", "Opportunity Hotels", "Opportunity SM", "Opportunity ISP", "Opportunity Tenders",
+            ]],
+        ],
+    },
 ]
 
 after_migrate = [
@@ -194,6 +203,8 @@ doctype_js = {
     "Opportunity Hotels": "public/js/opportunity_survey.js",
     "Opportunity Tenders": "public/js/opportunity_survey.js",
     "Opportunity ISP": "public/js/opportunity_survey.js",
+    "Hotspot": "public/js/opportunity_survey.js",
+    "Quotation": "public/js/quotation_customer_branch.js",
     "Sales Order": "public/js/sales_order_contract.js",
     "Sales Invoice": "public/js/sales_order_contract.js",
     "Material Request": "public/js/material_request.js",
@@ -214,7 +225,9 @@ override_whitelisted_methods = {
 }
 
 override_doctype_dashboards = {
+    "Opportunity": "ion_crm_sales.opportunity_dashboard.get_dashboard_data",
     "Quotation": "ion_crm_sales.quotation_dashboard.get_dashboard_data",
+    "Subscription": "ion_crm_sales.subscription_dashboard.get_dashboard_data",
 }
 
 # Svg Icons

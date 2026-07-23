@@ -1,3 +1,13 @@
+const ACCOUNT_MANAGER_ROLES = [
+    "ISP Account Manager",
+    "Tenders Account Manager",
+    "Hotels Account Manager",
+    "SM Account Manager",
+    "Dedicated Account Manager",
+];
+
+const BA_SCENARIO_FIELDS = ["custom_service_category", "custom_ba_transaction_type"];
+
 const BA_MANUAL_COMMISSION_LIMITS = {
     Dedicated: {"Old Accounts": 0.75, "Lead Acquisition": 3, Upsell: 2},
     Hotel: {"Old Accounts": 1, "Lead Acquisition": 5, Upsell: 3},
@@ -8,7 +18,20 @@ const BA_MANUAL_COMMISSION_LIMITS = {
 
 frappe.ui.form.on("Sales Order", {
     refresh(frm) {
+        set_ba_scenario_field_access(frm);
         update_manual_commission_limit_description(frm);
+        set_customer_branch_options(frm, true);
+
+        if (
+            frm.doc.docstatus === 1 &&
+            frappe.model.can_create("Subscription")
+        ) {
+            frm.add_custom_button(
+                __("Subscription"),
+                () => open_new_subscription(frm),
+                __("Create"),
+            );
+        }
 
         if (
             frm.is_new() ||
@@ -25,6 +48,10 @@ frappe.ui.form.on("Sales Order", {
         );
     },
 
+    onload(frm) {
+        set_ba_scenario_field_access(frm);
+    },
+
     custom_service_category(frm) {
         update_manual_commission_limit_description(frm);
         set_single_sales_team_manual_commission(frm);
@@ -33,6 +60,14 @@ frappe.ui.form.on("Sales Order", {
     custom_ba_transaction_type(frm) {
         update_manual_commission_limit_description(frm);
         set_single_sales_team_manual_commission(frm);
+    },
+
+    customer(frm) {
+        set_customer_branch_options(frm, false);
+    },
+
+    custom_customer_branch(frm) {
+        sync_customer_branch_id(frm);
     },
 
     validate(frm) {
@@ -42,7 +77,13 @@ frappe.ui.form.on("Sales Order", {
 
 frappe.ui.form.on("Sales Invoice", {
     refresh(frm) {
+        set_ba_scenario_field_access(frm);
         update_manual_commission_limit_description(frm);
+        set_customer_branch_options(frm, true);
+    },
+
+    onload(frm) {
+        set_ba_scenario_field_access(frm);
     },
 
     custom_service_category(frm) {
@@ -53,6 +94,14 @@ frappe.ui.form.on("Sales Invoice", {
     custom_ba_transaction_type(frm) {
         update_manual_commission_limit_description(frm);
         set_single_sales_team_manual_commission(frm);
+    },
+
+    customer(frm) {
+        set_customer_branch_options(frm, false);
+    },
+
+    custom_customer_branch(frm) {
+        sync_customer_branch_id(frm);
     },
 
     validate(frm) {
@@ -86,6 +135,30 @@ frappe.ui.form.on("Sales Team", {
         update_manual_sales_team_allocation(frm);
     },
 });
+
+function set_ba_scenario_field_access(frm) {
+    const is_account_manager = ACCOUNT_MANAGER_ROLES.some((role) => frappe.user.has_role(role));
+
+    BA_SCENARIO_FIELDS.forEach((fieldname) => {
+        frm.set_df_property(fieldname, "hidden", is_account_manager ? 0 : 1);
+        frm.set_df_property(fieldname, "read_only", is_account_manager ? 0 : 1);
+        frm.set_df_property(fieldname, "reqd", is_account_manager ? 1 : 0);
+    });
+}
+
+function open_new_subscription(frm) {
+    const subscription_name = frappe.model.get_new_name("Subscription");
+    const form_link = frappe.utils.get_form_link("Subscription", subscription_name);
+    const defaults = new URLSearchParams({
+        party_type: "Customer",
+        party: frm.doc.customer,
+        custom_type: frm.doc.custom_ba_transaction_type || "",
+        custom_originating_doctype: "Sales Order",
+        custom_originating_document: frm.doc.name,
+    });
+
+    window.open(`${form_link}?${defaults.toString()}`, "_blank", "noopener");
+}
 
 function update_manual_sales_team_allocation(frm) {
     const rows = frm.doc.sales_team || [];
@@ -213,6 +286,56 @@ function validate_manual_commission_total(frm) {
             ]),
         );
     }
+}
+
+// ─── Customer Branch select + auto-fetch ID (Sales Order / Sales Invoice) ───
+// Both doctypes have a plain "customer" Link field (unlike Opportunity/Quotation's
+// dynamic party_name). The value normally arrives pre-filled via the mapped-doc
+// copy from Quotation/Sales Order (same fieldname, no_copy not set), but the
+// Select control needs its `options` populated client-side to actually display
+// an already-set value - otherwise it renders blank even though frm.doc holds it.
+function set_customer_branch_options(frm, preserve_value) {
+    if (!frappe.meta.has_field(frm.doctype, "custom_customer_branch")) {
+        return;
+    }
+
+    const customer = frm.doc.customer;
+
+    if (!customer) {
+        frm._customer_branches = [];
+        frm.set_df_property("custom_customer_branch", "options", "");
+        frm.refresh_field("custom_customer_branch");
+        if (!preserve_value) {
+            frm.set_value("custom_customer_branch", "");
+            frm.set_value("custom_customer_branch_id", "");
+        }
+        return;
+    }
+
+    frappe.call({
+        method: "ion_crm_sales.opportunity.get_customer_branches",
+        args: { customer },
+        callback(r) {
+            const branches = r.message || [];
+            frm._customer_branches = branches;
+
+            const options = [""].concat(branches.map((b) => b.branch_customer).filter(Boolean));
+            frm.set_df_property("custom_customer_branch", "options", options.join("\n"));
+            frm.refresh_field("custom_customer_branch");
+
+            const current_value_still_valid = options.includes(frm.doc.custom_customer_branch);
+            if (!preserve_value || !current_value_still_valid) {
+                frm.set_value("custom_customer_branch", "");
+                frm.set_value("custom_customer_branch_id", "");
+            }
+        },
+    });
+}
+
+function sync_customer_branch_id(frm) {
+    const branches = frm._customer_branches || [];
+    const match = branches.find((b) => b.branch_customer === frm.doc.custom_customer_branch);
+    frm.set_value("custom_customer_branch_id", match ? match.branch_id : "");
 }
 
 function update_manual_commission_limit_description(frm) {

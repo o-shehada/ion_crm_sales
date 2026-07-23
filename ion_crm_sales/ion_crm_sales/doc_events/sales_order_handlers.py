@@ -1,20 +1,44 @@
 import frappe
 
 from ion_crm_sales.ion_crm_sales.doc_events.quotation_handlers import (
+    OPPORTUNITY_SOURCE_FIELDS,
     get_or_create_sales_person_for_user,
     get_source_opportunity,
     set_sales_team_contributor,
 )
 
 
+DIRECT_SALES_ORDER_ACCOUNT_MANAGER_ROLES = {
+    "ISP Account Manager",
+    "Tenders Account Manager",
+    "Hotels Account Manager",
+    "SM Account Manager",
+    "Dedicated Account Manager",
+}
+
+BA_SCENARIO_FIELDS = {
+    "custom_service_category": "Service Category",
+    "custom_ba_transaction_type": "BA Transaction Type",
+}
+
+
 def before_insert(doc, method=None):
     set_sales_order_source_fields(doc)
     set_account_manager_sales_team(doc)
+    set_current_user_sales_team_for_direct_sales_order(doc)
 
 
 def validate(doc, method=None):
     set_sales_order_source_fields(doc)
     set_account_manager_sales_team(doc)
+    set_current_user_sales_team_for_direct_sales_order(doc)
+    validate_ba_scenario_fields_for_account_manager_save(doc)
+    prevent_non_account_manager_ba_scenario_field_changes(doc)
+
+
+def before_submit(doc, method=None):
+    validate_ba_scenario_fields_for_submit(doc)
+
 
 def set_sales_order_source_fields(doc, method=None):
     """Copy the source type from a linked Quotation; preserve direct-entry values."""
@@ -37,6 +61,92 @@ def set_account_manager_sales_team(doc):
         return
 
     set_sales_team_contributor(doc, sales_person)
+
+
+def prevent_non_account_manager_ba_scenario_field_changes(doc):
+    if doc.is_new() or user_has_direct_sales_order_account_manager_role(frappe.session.user):
+        return
+
+    changed_fields = [
+        label
+        for fieldname, label in BA_SCENARIO_FIELDS.items()
+        if doc.has_value_changed(fieldname)
+    ]
+    if changed_fields:
+        frappe.throw(
+            "Only Account Manager users can edit {0} on Sales Order.".format(
+                " and ".join(changed_fields)
+            )
+        )
+
+
+def validate_ba_scenario_fields_for_account_manager_save(doc):
+    if user_has_direct_sales_order_account_manager_role(frappe.session.user):
+        validate_ba_scenario_fields(doc)
+
+
+def validate_ba_scenario_fields_for_submit(doc):
+    if user_has_direct_sales_order_account_manager_role(frappe.session.user):
+        validate_ba_scenario_fields(doc)
+
+
+def validate_ba_scenario_fields(doc):
+    missing_fields = [label for fieldname, label in BA_SCENARIO_FIELDS.items() if not doc.get(fieldname)]
+    if missing_fields:
+        frappe.throw(
+            "{0} required before saving or submitting Sales Order.".format(
+                " and ".join(missing_fields)
+            )
+        )
+
+
+def set_current_user_sales_team_for_direct_sales_order(doc):
+    if not doc.is_new():
+        return
+
+    if get_source_quotation(doc) or has_linked_opportunity(doc):
+        return
+
+    if not user_has_direct_sales_order_account_manager_role(frappe.session.user):
+        return
+
+    sales_person = get_existing_sales_person_for_user(frappe.session.user)
+    if not sales_person:
+        return
+
+    set_sales_team_contributor(doc, sales_person)
+
+
+def user_has_direct_sales_order_account_manager_role(user):
+    return bool(DIRECT_SALES_ORDER_ACCOUNT_MANAGER_ROLES.intersection(frappe.get_roles(user)))
+
+
+def get_existing_sales_person_for_user(user):
+    employee = frappe.db.get_value("Employee", {"user_id": user}, "name")
+    if not employee:
+        return None
+
+    return frappe.db.get_value(
+        "Sales Person",
+        {
+            "employee": employee,
+            "enabled": 1,
+            "is_group": 0,
+        },
+        "name",
+    )
+
+
+def has_linked_opportunity(doc):
+    for fieldname, _source_label in OPPORTUNITY_SOURCE_FIELDS:
+        if doc.get(fieldname):
+            return True
+
+    for item in doc.get("items") or []:
+        if (item.get("prevdoc_doctype") or "").startswith("Opportunity"):
+            return True
+
+    return False
 
 
 def get_source_quotation(doc):

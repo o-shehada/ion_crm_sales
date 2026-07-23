@@ -13,6 +13,19 @@ frappe.ui.form.on("Hotspot", {
         frm.trigger("handle_fields");
 
         var doc = frm.doc;
+        const quotation_states = [
+            "Surveyed",
+            "Requirements Gathering",
+            "Setup",
+            "Active",
+            "Closed",
+        ];
+
+        if (!frm.is_new() && quotation_states.includes(doc.workflow_state)) {
+            frm.add_custom_button(__("Quotation"), function () {
+                open_hotspot_quotation_in_new_tab(frm);
+            }, __("Create"));
+        }
 
         if (!frm.is_new() && doc.status !== "Lost") {
             if (frm.doc.hotspot_for != "Customer") {
@@ -42,14 +55,6 @@ frappe.ui.form.on("Hotspot", {
             frm.set_df_property('requirements', 'hidden', true)
         }
 
-
-        if (['Qualifying', 'Requirements Gathering', 'Setup'].includes(frm.doc.workflow_state)) {
-            setTimeout(() => {
-                frm.$wrapper.find(".actions-btn-group").hide()
-            }, 600)
-        } else {
-            frm.$wrapper.find(".actions-btn-group").show()
-        }
     },
 
     hotspot_for(frm) {
@@ -175,7 +180,6 @@ frappe.ui.form.on("Hotspot", {
     handle_fields: function (frm) {
         frm.$wrapper.find("[data-fieldname='proposal_tab']").show();
         frm.$wrapper.find("[data-fieldname='survey_tab']").hide();
-        frm.$wrapper.find("[data-fieldname='technical_tab']").hide();
 
         if (frm.doc.type == 'Based on Company Proposal') {
             frm.set_df_property('request', 'hidden', true)
@@ -194,10 +198,6 @@ frappe.ui.form.on("Hotspot", {
 
         if (!['Qualifying', 'Proposed'].includes(frm.doc.workflow_state)){
             frm.$wrapper.find("[data-fieldname='survey_tab']").show();
-        }
-
-        if (['Setup', 'Active', 'Closed'].includes(frm.doc.workflow_state)) {
-            frm.$wrapper.find("[data-fieldname='technical_tab']").show();
         }
 
         if ((frm.doc.workflow_state == "Qualifying")) {
@@ -220,12 +220,6 @@ frappe.ui.form.on("Hotspot", {
                 default:
                     break;
             }
-        }
-
-        if ((frm.doc.workflow_state == 'Qualifying' && frm.doc.type == "Based on Company Proposal") || ['Surveying'].includes(frm.doc.workflow_state)) {
-            frm.$wrapper.find(".actions-btn-group").hide()
-        } else {
-            frm.$wrapper.find(".actions-btn-group").show()
         }
     },
 
@@ -317,6 +311,50 @@ frappe.ui.form.on("Material Request Item", {
 		frm.events.get_item_data(frm, item, false);
 	},
 });
+
+
+function open_hotspot_quotation_in_new_tab(frm) {
+    const quotation_window = window.open(
+        frappe.urllib.get_full_url("/app/quotation"),
+        "_blank"
+    );
+
+    if (!quotation_window) {
+        frappe.msgprint(__("Allow pop-ups for this site to open the Quotation in a new tab."));
+        return;
+    }
+
+    const max_attempts = 120;
+    let attempts = 0;
+    const wait_for_frappe = window.setInterval(function () {
+        attempts += 1;
+
+        if (quotation_window.closed) {
+            window.clearInterval(wait_for_frappe);
+            return;
+        }
+
+        try {
+            const target_frappe = quotation_window.frappe;
+            if (target_frappe && target_frappe.model && target_frappe.model.open_mapped_doc) {
+                window.clearInterval(wait_for_frappe);
+                target_frappe.model.open_mapped_doc({
+                    method: "ion_crm_sales.ion_crm_sales.doctype.hotspot.hotspot.make_quotation",
+                    source_name: frm.doc.name,
+                    freeze_message: __("Creating Quotation..."),
+                });
+                return;
+            }
+        } catch (error) {
+            // The new tab can be temporarily inaccessible while it is navigating.
+        }
+
+        if (attempts >= max_attempts) {
+            window.clearInterval(wait_for_frappe);
+            frappe.msgprint(__("The Quotation tab did not finish loading. Please try again."));
+        }
+    }, 250);
+}
 
 function set_schedule_date(frm) {
 	if (frm.doc.schedule_date) {

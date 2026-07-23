@@ -44,54 +44,40 @@ def make_quotation(source_name, target_doc=None):
 	def set_missing_values(source, target):
 		from erpnext.controllers.accounts_controller import get_default_taxes_and_charges
 
-		quotation = frappe.get_doc(target)
+		target.run_method("set_missing_values")
 
-		company_currency = frappe.get_cached_value("Company", quotation.company, "default_currency")
-
-		if company_currency == quotation.currency:
-			exchange_rate = 1
+		company_currency = frappe.get_cached_value("Company", target.company, "default_currency")
+		if company_currency == target.currency:
+			target.conversion_rate = 1
 		else:
-			exchange_rate = get_exchange_rate(
-				quotation.currency, company_currency, quotation.transaction_date, args="for_selling"
+			target.conversion_rate = get_exchange_rate(
+				target.currency, company_currency, target.transaction_date, args="for_selling"
 			)
 
-		quotation.conversion_rate = exchange_rate
+		taxes = get_default_taxes_and_charges("Sales Taxes and Charges Template", company=target.company)
+		if taxes and taxes.get("taxes"):
+			target.update(taxes)
 
-		# get default taxes
-		taxes = get_default_taxes_and_charges("Sales Taxes and Charges Template", company=quotation.company)
-		if taxes.get("taxes"):
-			quotation.update(taxes)
+		target.run_method("calculate_taxes_and_totals")
 
-		quotation.run_method("set_missing_values")
-		quotation.run_method("calculate_taxes_and_totals")
-		if not source.get("items", []):
-			quotation.opportunity = source.name
-
-		frappe.get_doc(source_name).quote = quotation.name
-
-	doclist = get_mapped_doc(
+	return get_mapped_doc(
 		"Hotspot",
 		source_name,
 		{
 			"Hotspot": {
 				"doctype": "Quotation",
-				"field_map": {"hotspot_for": "quotation_to", "name": "enq_no"},
+				"field_map": {"hotspot_for": "quotation_to"},
 			},
-			"Opportunity Item": {
+			"Hotspot Item": {
 				"doctype": "Quotation Item",
-				"field_map": {
-					"parent": "prevdoc_docname",
-					"parenttype": "prevdoc_doctype",
-					"uom": "stock_uom",
-				},
-				"add_if_empty": True,
+				"field_map": {"item": "item_code"},
 			},
 		},
 		target_doc,
 		set_missing_values,
 	)
 
-	return doclist
+
 
 @frappe.whitelist()
 def make_supplier_quotation(source_name, target_doc=None):

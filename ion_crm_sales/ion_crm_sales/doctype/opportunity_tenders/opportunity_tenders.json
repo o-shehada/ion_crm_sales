@@ -4,7 +4,7 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
- "creation": "2025-08-10 18:58:20.078673",
+ "creation": "2026-07-15 05:28:47.469306",
  "description": "Potential Sales Deal",
  "doctype": "DocType",
  "document_type": "Document",
@@ -17,6 +17,8 @@
   "party_name",
   "customer_name",
   "status",
+  "custom_customer_branch",
+  "custom_customer_branch_id",
   "column_break0",
   "opportunity_type",
   "source",
@@ -25,6 +27,17 @@
   "sales_stage",
   "expected_closing",
   "probability",
+  "custom_section_break_itrgi",
+  "custom_cxo_team",
+  "custom_rfp_document",
+  "custom_cxo_team_leader",
+  "custom_nationality",
+  "custom_column_break_trmnr",
+  "custom_account_manager",
+  "custom_surveyor_manager",
+  "custom_sales_engineer",
+  "custom_finance",
+  "custom_pro",
   "organization_details_section",
   "no_of_employees",
   "annual_revenue",
@@ -78,7 +91,9 @@
   "contact_html",
   "contact_display",
   "items_section",
+  "custom_warehouse",
   "items",
+  "custom_price_list",
   "section_break_32",
   "base_total",
   "column_break_33",
@@ -87,41 +102,25 @@
   "open_activities_html",
   "all_activities_section",
   "all_activities_html",
+  "custom_scope",
+  "custom_scope_description",
+  "custom_deliverables",
+  "custom_out_of_scope",
   "notes_tab",
   "notes_html",
   "notes",
   "custom_survey",
   "custom_section_break_ikapp",
-  "column_break_xkht",
-  "custom_column_break_tujep",
-  "custom_survey_attachment",
-  "custom_section_break_nixpu",
   "custom_surveyors",
+  "custom_survey_attachment",
   "custom_technical",
   "custom_technical_survey_template_table",
-  "supplier_quotations_tab",
-  "opportunity_supplier_quotation_table",
   "dashboard_tab",
   "custom_logs",
   "custom_audit_log",
   "workflow_state",
-  "custom_section_break_itrgi",
-  "custom_rfp_document",
-  "custom_column_break_trmnr",
-  "custom_account_manager",
-  "custom_sales_engineer",
-  "custom_finance",
-  "custom_pro",
-  "custom_nationality",
-  "custom_scope",
-  "custom_scope_description",
-  "custom_deliverables",
-  "custom_out_of_scope",
-  "custom_section_break_h8otc",
-  "custom_cxo_team",
-  "custom_cxo_team_leader",
-  "custom_price_list",
-  "custom_warehouse"
+  "supplier_quotations_tab",
+  "opportunity_supplier_quotation_table"
  ],
  "fields": [
   {
@@ -142,6 +141,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Opportunity From",
+   "link_filters": "[[\"DocType\",\"name\",\"in\",[\"Customer\",\"Prospect\"]]]",
    "oldfieldname": "enquiry_from",
    "oldfieldtype": "Select",
    "options": "DocType",
@@ -173,6 +173,7 @@
    "default": "Open",
    "fieldname": "status",
    "fieldtype": "Select",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
@@ -190,7 +191,7 @@
    "width": "50%"
   },
   {
-   "default": "Sales",
+   "default": "Tenders",
    "fieldname": "opportunity_type",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -208,6 +209,7 @@
    "options": "Lead Source"
   },
   {
+   "default": "__user",
    "fieldname": "opportunity_owner",
    "fieldtype": "Link",
    "label": "Opportunity Owner",
@@ -228,13 +230,72 @@
    "fieldname": "expected_closing",
    "fieldtype": "Date",
    "label": "Expected Closing Date",
-   "no_copy": 1
+   "no_copy": 1,
+   "reqd": 1
   },
   {
    "default": "100",
    "fieldname": "probability",
    "fieldtype": "Percent",
    "label": "Probability (%)"
+  },
+  {
+   "fieldname": "custom_section_break_itrgi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_rfp_document",
+   "fieldtype": "Attach",
+   "label": "RFP Document"
+  },
+  {
+   "fieldname": "custom_column_break_trmnr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_surveyor_manager",
+   "fieldtype": "Link",
+   "label": "Surveyor Manager",
+   "link_filters": "[[\"User\",\"role\",\"=\",\"Surveyor Manager\"]]",
+   "mandatory_depends_on": "eval:!doc.__islocal",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_account_manager",
+   "fieldtype": "Link",
+   "label": "Account Manager",
+   "link_filters": "[[\"User\",\"role\",\"=\",\"Tenders Account Manager\"]]",
+   "mandatory_depends_on": "eval:!doc.__islocal",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_sales_engineer",
+   "fieldtype": "Link",
+   "label": "Sales Engineer",
+   "link_filters": "[[\"User\",\"role\",\"=\",\"Sales Engineer\"]]",
+   "mandatory_depends_on": "eval:!doc.__islocal",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_finance",
+   "fieldtype": "Link",
+   "label": "Finance",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"Finance\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_pro",
+   "fieldtype": "Link",
+   "label": "PRO",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"PRO\"]]",
+   "options": "User"
+  },
+  {
+   "fieldname": "custom_nationality",
+   "fieldtype": "Link",
+   "label": "Nationality",
+   "options": "Country",
+   "reqd": 1
   },
   {
    "fieldname": "organization_details_section",
@@ -271,13 +332,15 @@
    "fieldname": "industry",
    "fieldtype": "Link",
    "label": "Industry",
-   "options": "Industry Type"
+   "options": "Industry Type",
+   "reqd": 1
   },
   {
    "fieldname": "market_segment",
    "fieldtype": "Link",
    "label": "Market Segment",
-   "options": "Market Segment"
+   "options": "Market Segment",
+   "reqd": 1
   },
   {
    "fieldname": "website",
@@ -291,7 +354,8 @@
   {
    "fieldname": "city",
    "fieldtype": "Data",
-   "label": "City"
+   "label": "City",
+   "reqd": 1
   },
   {
    "fieldname": "state",
@@ -627,6 +691,57 @@
    "label": "All Activities HTML"
   },
   {
+   "fieldname": "custom_scope",
+   "fieldtype": "Tab Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "custom_scope_description",
+   "fieldtype": "Text Editor",
+   "label": "Scope Description",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_deliverables",
+   "fieldtype": "Table",
+   "label": "Deliverables",
+   "options": "Scope Deliverables"
+  },
+  {
+   "fieldname": "custom_out_of_scope",
+   "fieldtype": "Text",
+   "label": "Out of Scope",
+   "translatable": 1
+  },
+  {
+   "fieldname": "custom_cxo_team",
+   "fieldtype": "Table",
+   "label": "CXO Team",
+   "options": "CXO Team"
+  },
+  {
+   "fieldname": "custom_cxo_team_leader",
+   "fieldtype": "Link",
+   "label": "CXO Team Leader",
+   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"TEAM LEADER\"]]",
+   "options": "User"
+  },
+  {
+   "default": "Tenders",
+   "fieldname": "custom_price_list",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Price List",
+   "options": "Price List",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "notes_tab",
    "fieldtype": "Tab Break",
@@ -655,17 +770,9 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "custom_column_break_tujep",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "custom_survey_attachment",
    "fieldtype": "Attach",
    "label": "Survey Attachment"
-  },
-  {
-   "fieldname": "custom_section_break_nixpu",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "custom_surveyors",
@@ -714,113 +821,6 @@
    "options": "Workflow State"
   },
   {
-   "fieldname": "custom_section_break_itrgi",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "custom_rfp_document",
-   "fieldtype": "Attach",
-   "label": "RFP Document",
-   "reqd": 1
-  },
-  {
-   "fieldname": "custom_column_break_trmnr",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "custom_account_manager",
-   "fieldtype": "Link",
-   "label": "Account Manager",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"AM\"]]",
-   "options": "User"
-  },
-  {
-   "fieldname": "custom_sales_engineer",
-   "fieldtype": "Link",
-   "label": "Sales Engineer",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"SE\"]]",
-   "options": "User"
-  },
-  {
-   "fieldname": "custom_finance",
-   "fieldtype": "Link",
-   "label": "Finance",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"Finance\"]]",
-   "options": "User"
-  },
-  {
-   "fieldname": "custom_pro",
-   "fieldtype": "Link",
-   "label": "PRO",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"PRO\"]]",
-   "options": "User"
-  },
-  {
-   "fieldname": "custom_nationality",
-   "fieldtype": "Link",
-   "label": "Nationality",
-   "options": "Country"
-  },
-  {
-   "fieldname": "custom_scope",
-   "fieldtype": "Tab Break",
-   "label": "Scope"
-  },
-  {
-   "fieldname": "custom_scope_description",
-   "fieldtype": "Text Editor",
-   "label": "Scope Description",
-   "translatable": 1
-  },
-  {
-   "fieldname": "custom_deliverables",
-   "fieldtype": "Table",
-   "label": "Deliverables",
-   "options": "Scope Deliverables"
-  },
-  {
-   "fieldname": "custom_out_of_scope",
-   "fieldtype": "Text",
-   "label": "Out of Scope",
-   "translatable": 1
-  },
-  {
-   "fieldname": "custom_section_break_h8otc",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "custom_cxo_team",
-   "fieldtype": "Table",
-   "label": "CXO Team",
-   "options": "CXO Team"
-  },
-  {
-   "fieldname": "custom_cxo_team_leader",
-   "fieldtype": "Link",
-   "label": "CXO Team Leader",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"TEAM LEADER\"]]",
-   "options": "User"
-  },
-  {
-   "default": "Tenders",
-   "fieldname": "custom_price_list",
-   "fieldtype": "Link",
-   "hidden": 1,
-   "label": "Price List",
-   "options": "Price List",
-   "read_only": 1
-  },
-  {
-   "fieldname": "custom_warehouse",
-   "fieldtype": "Link",
-   "label": "Warehouse",
-   "options": "Warehouse"
-  },
-  {
-   "fieldname": "column_break_xkht",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "supplier_quotations_tab",
    "fieldtype": "Tab Break",
    "label": "Supplier Quotations"
@@ -832,12 +832,23 @@
    "no_copy": 1,
    "options": "Opportunity Supplier Quotation Table",
    "read_only": 1
+  },
+  {
+   "fieldname": "custom_customer_branch",
+   "fieldtype": "Select",
+   "label": "Customer Branch"
+  },
+  {
+   "fieldname": "custom_customer_branch_id",
+   "fieldtype": "Data",
+   "label": "Customer Branch ID",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "icon": "fa fa-info-sign",
  "links": [],
- "modified": "2026-05-13 03:15:28.397177",
+ "modified": "2026-07-20 04:55:13.942133",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Opportunity Tenders",
@@ -848,10 +859,11 @@
    "create": 1,
    "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Tenders Sales",
+   "role": "System Manager",
    "share": 1,
    "write": 1
   },
@@ -860,11 +872,30 @@
    "delete": 1,
    "email": 1,
    "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales Manager",
+   "role": "Tenders Account Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Surveyor Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Engineer",
    "share": 1,
    "write": 1
   }

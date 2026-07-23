@@ -11,7 +11,7 @@ QUOTATION_LINK_FIELDS = {
 
 
 QUOTATION_MAPPERS = {
-    "Opportunity": "erpnext.crm.doctype.opportunity.opportunity.make_quotation",
+    "Opportunity": "ion_crm_sales.opportunity.make_quotation",
     "Opportunity SM": "ion_crm_sales.ion_crm_sales.doctype.opportunity_sm.opportunity_sm.make_quotation",
     "Opportunity Hotels": "ion_crm_sales.ion_crm_sales.doctype.opportunity_hotels.opportunity_hotels.make_quotation",
     "Opportunity Tenders": "ion_crm_sales.ion_crm_sales.doctype.opportunity_tenders.opportunity_tenders.make_quotation",

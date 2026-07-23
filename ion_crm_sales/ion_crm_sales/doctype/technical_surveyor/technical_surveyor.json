@@ -17,7 +17,8 @@
    "in_list_view": 1,
    "label": "Department",
    "options": "Department",
-   "reqd": 1
+   "reqd": 1,
+   "permlevel": 2
   },
   {
    "fieldname": "surveyor",
@@ -25,14 +26,16 @@
    "in_list_view": 1,
    "label": "Surveyor",
    "options": "User",
-   "reqd": 1
+   "reqd": 1,
+   "permlevel": 2
   },
   {
    "fieldname": "template",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Template",
-   "options": "Technical Survey Template"
+   "options": "Technical Survey Template",
+   "permlevel": 2
   }
  ],
  "grid_page_length": 50,

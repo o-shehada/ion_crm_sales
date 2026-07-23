@@ -15,20 +15,23 @@
    "fieldname": "deliverable",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Deliverable"
+   "label": "Deliverable",
+   "permlevel": 1
   },
   {
    "default": "0",
    "fieldname": "achiveable",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Achiveable"
+   "label": "Achiveable",
+   "permlevel": 1
   },
   {
    "fieldname": "date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Date"
+   "label": "Date",
+   "permlevel": 1
   }
  ],
  "grid_page_length": 50,

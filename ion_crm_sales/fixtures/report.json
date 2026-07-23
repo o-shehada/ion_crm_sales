@@ -7,6 +7,174 @@
   "docstatus": 0,
   "doctype": "Report",
   "filters": [],
+  "is_standard": "No",
+  "javascript": null,
+  "json": "{\"filters\":[[\"Expense Claim\",\"creation\",\"Between\",[\"2025-09-01\",\"2025-09-30\"],false]],\"fields\":[[\"name\",\"Expense Claim\"],[\"employee_name\",\"Expense Claim\"],[\"employee\",\"Expense Claim\"],[\"company\",\"Expense Claim\"],[\"grand_total\",\"Expense Claim\"],[\"total_claimed_amount\",\"Expense Claim\"],[\"total_amount_reimbursed\",\"Expense Claim\"],[\"posting_date\",\"Expense Claim\"],[\"status\",\"Expense Claim\"],[\"description\",\"Expense Claim Detail\"],[\"expense_type\",\"Expense Claim Detail\"]],\"order_by\":\"`tabExpense Claim`.`modified` desc\",\"add_totals_row\":0,\"page_length\":20,\"column_widths\":{\"name\":120,\"employee_name\":150,\"employee\":120,\"company\":120,\"grand_total\":120,\"total_claimed_amount\":160,\"total_amount_reimbursed\":120,\"posting_date\":120,\"status\":120,\"Expense Claim Detail:description\":300,\"Expense Claim Detail:expense_type\":150},\"group_by\":null}",
+  "letter_head": null,
+  "modified": "2025-09-30 12:07:53.808376",
+  "module": "HR",
+  "name": "تقرير مصروفات شهريه",
+  "prepared_report": 0,
+  "query": null,
+  "ref_doctype": "Expense Claim",
+  "reference_report": null,
+  "report_name": "تقرير مصروفات شهريه",
+  "report_script": null,
+  "report_type": "Report Builder",
+  "roles": [
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Employee"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "HR User"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Expense Approver"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "HR Manager"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Employee Self Service"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Expense Approver"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Employee"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "HR Manager"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "HR User"
+   },
+   {
+    "parent": "تقرير مصروفات شهريه",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Employee Self Service"
+   }
+  ],
+  "timeout": 0
+ },
+ {
+  "add_total_row": 0,
+  "add_translate_data": 0,
+  "columns": [],
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "filters": [],
+  "is_standard": "No",
+  "javascript": null,
+  "json": "{\"columns\":[{\"label\":\"Posting Date\",\"fieldname\":\"posting_date\",\"fieldtype\":\"Date\",\"width\":100,\"id\":\"posting_date\",\"name\":\"Posting Date\",\"editable\":false},{\"label\":\"Account\",\"fieldname\":\"account\",\"fieldtype\":\"Link\",\"options\":\"Account\",\"width\":180,\"id\":\"account\",\"name\":\"Account\",\"editable\":false,\"compareValue\":null},{\"label\":\"Debit (LYD)\",\"fieldname\":\"debit\",\"fieldtype\":\"Currency\",\"options\":\"presentation_currency\",\"width\":130,\"id\":\"debit\",\"name\":\"Debit (LYD)\",\"editable\":false,\"compareValue\":null},{\"label\":\"Credit (LYD)\",\"fieldname\":\"credit\",\"fieldtype\":\"Currency\",\"options\":\"presentation_currency\",\"width\":130,\"id\":\"credit\",\"name\":\"Credit (LYD)\",\"editable\":false,\"compareValue\":null},{\"label\":\"Balance (LYD)\",\"fieldname\":\"balance\",\"fieldtype\":\"Currency\",\"options\":\"presentation_currency\",\"width\":130,\"id\":\"balance\",\"name\":\"Balance (LYD)\",\"editable\":false,\"compareValue\":null},{\"label\":\"Voucher Type\",\"fieldname\":\"voucher_type\",\"width\":120,\"id\":\"voucher_type\",\"name\":\"Voucher Type\",\"editable\":false,\"compareValue\":null},{\"label\":\"Voucher Subtype\",\"fieldname\":\"voucher_subtype\",\"fieldtype\":\"Data\",\"width\":180,\"id\":\"voucher_subtype\",\"name\":\"Voucher Subtype\",\"editable\":false,\"compareValue\":null},{\"label\":\"Voucher No\",\"fieldname\":\"voucher_no\",\"fieldtype\":\"Dynamic Link\",\"options\":\"voucher_type\",\"width\":180,\"id\":\"voucher_no\",\"name\":\"Voucher No\",\"editable\":false,\"compareValue\":null},{\"label\":\"Against Account\",\"fieldname\":\"against\",\"width\":120,\"id\":\"against\",\"name\":\"Against Account\",\"editable\":false,\"compareValue\":null},{\"label\":\"Party Type\",\"fieldname\":\"party_type\",\"width\":100,\"id\":\"party_type\",\"name\":\"Party Type\",\"editable\":false,\"compareValue\":null},{\"label\":\"Party\",\"fieldname\":\"party\",\"width\":100,\"id\":\"party\",\"name\":\"Party\",\"editable\":false,\"compareValue\":null},{\"label\":\"Project\",\"options\":\"Project\",\"fieldname\":\"project\",\"width\":100,\"id\":\"project\",\"name\":\"Project\",\"editable\":false,\"compareValue\":null},{\"label\":\"Department\",\"options\":\"Department\",\"fieldname\":\"department\",\"width\":100,\"id\":\"department\",\"name\":\"Department\",\"editable\":false,\"compareValue\":null},{\"label\":\"Branch\",\"options\":\"Branch\",\"fieldname\":\"branch\",\"width\":100,\"id\":\"branch\",\"name\":\"Branch\",\"editable\":false,\"compareValue\":null},{\"label\":\"Revenue\",\"options\":\"Revenue\",\"fieldname\":\"revenue\",\"width\":100,\"id\":\"revenue\",\"name\":\"Revenue\",\"editable\":false,\"compareValue\":null},{\"label\":\"Bussniess unit\",\"options\":\"Bussniess unit\",\"fieldname\":\"bussniess_unit\",\"width\":100,\"id\":\"bussniess_unit\",\"name\":\"Bussniess unit\",\"editable\":false,\"compareValue\":null},{\"label\":\"Cost Center\",\"options\":\"Cost Center\",\"fieldname\":\"cost_center\",\"width\":100,\"id\":\"cost_center\",\"name\":\"Cost Center\",\"editable\":false,\"compareValue\":null},{\"label\":\"Against Voucher Type\",\"fieldname\":\"against_voucher_type\",\"width\":100,\"id\":\"against_voucher_type\",\"name\":\"Against Voucher Type\",\"editable\":false,\"compareValue\":null},{\"label\":\"Against Voucher\",\"fieldname\":\"against_voucher\",\"fieldtype\":\"Dynamic Link\",\"options\":\"against_voucher_type\",\"width\":100,\"id\":\"against_voucher\",\"name\":\"Against Voucher\",\"editable\":false,\"compareValue\":null},{\"label\":\"Supplier Invoice No\",\"fieldname\":\"bill_no\",\"fieldtype\":\"Data\",\"width\":100,\"id\":\"bill_no\",\"name\":\"Supplier Invoice No\",\"editable\":false,\"compareValue\":null}],\"filters\":{\"company\":\"ION\",\"from_date\":\"2026-03-03\",\"to_date\":\"2026-03-03\",\"account\":[],\"party_type\":\"Employee\",\"party\":[\"HR-EMP-00011\"],\"party_name\":\" محمد توفيق بشير بعيو \",\"categorize_by\":\"Categorize by Voucher (Consolidated)\",\"cost_center\":[],\"revenue\":[],\"department\":[],\"bussniess_unit\":[],\"branch\":[],\"project\":[],\"include_dimensions\":1,\"include_default_book_entries\":1}}",
+  "letter_head": null,
+  "modified": "2026-03-03 11:12:53.017045",
+  "module": "Accounts",
+  "name": "امين عهدة بعيو",
+  "prepared_report": 0,
+  "query": null,
+  "ref_doctype": "GL Entry",
+  "reference_report": "General Ledger",
+  "report_name": "امين عهدة بعيو",
+  "report_script": null,
+  "report_type": "Custom Report",
+  "roles": [
+   {
+    "parent": "امين عهدة بعيو",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Accounts User"
+   },
+   {
+    "parent": "امين عهدة بعيو",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Accounts Manager"
+   },
+   {
+    "parent": "امين عهدة بعيو",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Auditor"
+   }
+  ],
+  "timeout": 0
+ },
+ {
+  "add_total_row": 0,
+  "add_translate_data": 0,
+  "columns": [],
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "filters": [],
+  "is_standard": "No",
+  "javascript": null,
+  "json": "{\"filters\":[[\"Language\",\"enabled\",\"=\",1,false],[\"Language\",\"language_name\",\"like\",\"%عربي%\"]],\"fields\":[[\"name\",\"Language\"],[\"docstatus\",\"Language\"],[\"language_name\",\"Language\"],[\"language_code\",\"Language\"],[\"flag\",\"Language\"],[\"enabled\",\"Language\"]],\"order_by\":\"`tabLanguage`.`modified` desc\",\"add_totals_row\":0,\"page_length\":20,\"column_widths\":{\"name\":120,\"docstatus\":120,\"language_name\":120,\"language_code\":120,\"flag\":120,\"enabled\":120},\"group_by\":null}",
+  "letter_head": null,
+  "modified": "2026-04-20 20:02:57.578558",
+  "module": "Core",
+  "name": "مصطفى",
+  "prepared_report": 0,
+  "query": null,
+  "ref_doctype": "Language",
+  "reference_report": null,
+  "report_name": "مصطفى",
+  "report_script": null,
+  "report_type": "Report Builder",
+  "roles": [
+   {
+    "parent": "مصطفى",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "System Manager"
+   },
+   {
+    "parent": "مصطفى",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "All"
+   }
+  ],
+  "timeout": 0
+ },
+ {
+  "add_total_row": 0,
+  "add_translate_data": 0,
+  "columns": [],
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "filters": [],
   "is_standard": "Yes",
   "javascript": null,
   "json": null,
@@ -9350,7 +9518,7 @@
   "timeout": 0
  },
  {
-  "add_total_row": 0,
+  "add_total_row": 1,
   "add_translate_data": 0,
   "columns": [],
   "disabled": 0,

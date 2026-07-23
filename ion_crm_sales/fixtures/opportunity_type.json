@@ -47,5 +47,12 @@
   "doctype": "Opportunity Type",
   "modified": "2025-09-27 12:12:38.104701",
   "name": "Sales"
+ },
+ {
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Opportunity Type",
+  "modified": "2026-05-12 12:45:47.690358",
+  "name": "ISP"
  }
 ]

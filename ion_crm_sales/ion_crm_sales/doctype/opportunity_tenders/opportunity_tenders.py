@@ -226,7 +226,7 @@ def make_material_request(source_name, target_doc=None):
 			material_request.update(taxes)
 
 		material_request.run_method("set_missing_values")
-		material_request.material_request_type = "Material Issue"
+		material_request.material_request_type = "Request for Quotation"
 		for fieldname in ("custom_tenders_opportunity", "custom_tender_opportunity"):
 			if frappe.get_meta("Material Request").has_field(fieldname):
 				material_request.set(fieldname, source.name)

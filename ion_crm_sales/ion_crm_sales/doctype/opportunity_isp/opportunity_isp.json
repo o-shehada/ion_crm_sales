@@ -17,6 +17,8 @@
   "party_name",
   "customer_name",
   "status",
+  "custom_customer_branch",
+  "custom_customer_branch_id",
   "column_break0",
   "opportunity_type",
   "source",
@@ -29,8 +31,8 @@
   "expected_closing",
   "probability",
   "custom_section_break_u9qdh",
-  "custom_surveyor_manager",
   "custom_account_manager",
+  "custom_surveyor_manager",
   "custom_finance",
   "custom_column_break_wdwqg",
   "custom_sales_engineer",
@@ -159,6 +161,7 @@
    "oldfieldname": "naming_series",
    "oldfieldtype": "Select",
    "options": "CRM-OPP-.YYYY.-",
+   "permlevel": 4,
    "reqd": 1,
    "set_only_once": 1
   },
@@ -171,6 +174,7 @@
    "oldfieldname": "enquiry_from",
    "oldfieldtype": "Select",
    "options": "DocType",
+   "permlevel": 4,
    "print_hide": 1,
    "reqd": 1
   },
@@ -183,6 +187,7 @@
    "oldfieldname": "customer",
    "oldfieldtype": "Link",
    "options": "opportunity_from",
+   "permlevel": 4,
    "print_hide": 1,
    "reqd": 1
   },
@@ -193,12 +198,14 @@
    "hidden": 1,
    "in_global_search": 1,
    "label": "Customer Name",
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "default": "Open",
    "fieldname": "status",
    "fieldtype": "Select",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
@@ -213,6 +220,7 @@
    "fieldname": "column_break0",
    "fieldtype": "Column Break",
    "oldfieldtype": "Column Break",
+   "permlevel": 4,
    "width": "50%"
   },
   {
@@ -223,7 +231,8 @@
    "label": "Opportunity Type",
    "oldfieldname": "enquiry_type",
    "oldfieldtype": "Select",
-   "options": "Opportunity Type"
+   "options": "Opportunity Type",
+   "permlevel": 4
   },
   {
    "fieldname": "source",
@@ -231,130 +240,156 @@
    "label": "Source",
    "oldfieldname": "source",
    "oldfieldtype": "Select",
-   "options": "Lead Source"
+   "options": "Lead Source",
+   "permlevel": 4
   },
   {
+   "default": "__user",
    "fieldname": "opportunity_owner",
    "fieldtype": "Link",
    "label": "Opportunity Owner",
-   "options": "User"
+   "options": "User",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_year",
    "fieldtype": "Data",
    "label": "Year",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_customer_english_name_prtg",
    "fieldtype": "Data",
    "label": "Customer English Name (PRTG)",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_english_name",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "English Name",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "column_break_10",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "default": "Prospecting",
    "fieldname": "sales_stage",
    "fieldtype": "Link",
    "label": "Sales Stage",
-   "options": "Sales Stage"
+   "options": "Sales Stage",
+   "permlevel": 4
   },
   {
    "fieldname": "expected_closing",
    "fieldtype": "Date",
    "label": "Expected Closing Date",
-   "no_copy": 1
+   "no_copy": 1,
+   "permlevel": 4
   },
   {
    "default": "100",
    "fieldname": "probability",
    "fieldtype": "Percent",
-   "label": "Probability (%)"
+   "label": "Probability (%)",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_section_break_u9qdh",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_surveyor_manager",
    "fieldtype": "Link",
    "label": "Surveyor Manager",
    "link_filters": "[[\"User\",\"role\",\"=\",\"Surveyor Manager\"]]",
+   "mandatory_depends_on": "eval:!doc.__islocal && doc.workflow_state != \"Draft\"",
    "options": "User",
-   "reqd": 1
+   "permlevel": 4
   },
   {
    "fieldname": "custom_account_manager",
    "fieldtype": "Link",
    "label": "Account Manager",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"AM\"]]",
-   "options": "User"
+   "link_filters": "[[\"User\",\"role\",\"=\",\"ISP Account Manager\"]]",
+   "mandatory_depends_on": "eval:!doc.__islocal && doc.workflow_state != \"Draft\"",
+   "options": "User",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_finance",
    "fieldtype": "Link",
    "label": "Finance",
    "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"Finance\"]]",
-   "options": "User"
+   "options": "User",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_column_break_wdwqg",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_sales_engineer",
    "fieldtype": "Link",
    "label": "Sales Engineer",
-   "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"SE\"]]",
-   "options": "User"
+   "link_filters": "[[\"User\",\"role\",\"=\",\"Sales Engineer\"]]",
+   "mandatory_depends_on": "eval:!doc.__islocal && doc.workflow_state != \"Draft\"",
+   "options": "User",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_pro",
    "fieldtype": "Link",
    "label": "PRO",
    "link_filters": "[[\"User\",\"role_profile_name\",\"=\",\"PRO\"]]",
-   "options": "User"
+   "options": "User",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_section_break_3vjkf",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_request",
    "fieldtype": "Long Text",
    "label": "Request",
+   "permlevel": 4,
    "reqd": 1
   },
   {
    "fieldname": "custom_requirements",
    "fieldtype": "Text Editor",
    "label": "Requirements",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "organization_details_section",
    "fieldtype": "Section Break",
-   "label": "Organization"
+   "label": "Organization",
+   "permlevel": 4
   },
   {
    "fieldname": "no_of_employees",
    "fieldtype": "Select",
    "label": "No of Employees",
-   "options": "1-10\n11-50\n51-200\n201-500\n501-1000\n1000+"
+   "options": "1-10\n11-50\n51-200\n201-500\n501-1000\n1000+",
+   "permlevel": 4
   },
   {
    "fieldname": "annual_revenue",
    "fieldtype": "Currency",
-   "label": "Annual Revenue"
+   "label": "Annual Revenue",
+   "permlevel": 4
   },
   {
    "depends_on": "eval:doc.opportunity_from=='Customer' && doc.party_name",
@@ -364,55 +399,65 @@
    "oldfieldname": "customer_group",
    "oldfieldtype": "Link",
    "options": "Customer Group",
+   "permlevel": 4,
    "print_hide": 1,
    "search_index": 1
   },
   {
    "fieldname": "column_break_23",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "industry",
    "fieldtype": "Link",
    "label": "Industry",
-   "options": "Industry Type"
+   "options": "Industry Type",
+   "permlevel": 4
   },
   {
    "fieldname": "market_segment",
    "fieldtype": "Link",
    "label": "Market Segment",
-   "options": "Market Segment"
+   "options": "Market Segment",
+   "permlevel": 4
   },
   {
    "fieldname": "website",
    "fieldtype": "Data",
-   "label": "Website"
+   "label": "Website",
+   "permlevel": 4
   },
   {
    "fieldname": "column_break_31",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "city",
    "fieldtype": "Data",
-   "label": "City"
+   "label": "City",
+   "permlevel": 4
   },
   {
    "fieldname": "state",
    "fieldtype": "Data",
-   "label": "State/Province"
+   "label": "State/Province",
+   "permlevel": 4
   },
   {
    "fieldname": "country",
    "fieldtype": "Link",
    "label": "Country",
-   "options": "Country"
+   "options": "Country",
+   "permlevel": 4
   },
   {
    "fieldname": "territory",
    "fieldtype": "Link",
    "label": "Territory",
    "options": "Territory",
+   "permlevel": 4,
    "print_hide": 1,
    "search_index": 1
   },
@@ -420,69 +465,82 @@
    "fieldname": "custom_nationality",
    "fieldtype": "Link",
    "label": "Nationality",
-   "options": "Country"
+   "options": "Country",
+   "permlevel": 4
   },
   {
    "fieldname": "section_break_14",
    "fieldtype": "Section Break",
-   "label": "Opportunity Value"
+   "label": "Opportunity Value",
+   "permlevel": 4
   },
   {
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
-   "options": "Currency"
+   "options": "Currency",
+   "permlevel": 4
   },
   {
    "fieldname": "column_break_36",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "conversion_rate",
    "fieldtype": "Float",
-   "label": "Exchange Rate"
+   "label": "Exchange Rate",
+   "permlevel": 4
   },
   {
    "fieldname": "column_break_17",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "opportunity_amount",
    "fieldtype": "Currency",
    "label": "Opportunity Amount",
-   "options": "currency"
+   "options": "currency",
+   "permlevel": 4
   },
   {
    "fieldname": "base_opportunity_amount",
    "fieldtype": "Currency",
    "label": "Opportunity Amount (Company Currency)",
    "options": "Company:company:default_currency",
+   "permlevel": 4,
    "print_hide": 1,
    "read_only": 1
   },
   {
    "fieldname": "custom_section_break_kncma",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_contract_starting_date",
    "fieldtype": "Date",
-   "label": "Contract Starting Date"
+   "label": "Contract Starting Date",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_working_dayshours",
    "fieldtype": "Data",
    "label": "Working Days\\Hours",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_column_break_y5wig",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_contract_end_date",
    "fieldtype": "Data",
    "label": "Contract End Date",
+   "permlevel": 4,
    "translatable": 1
   },
   {
@@ -491,7 +549,8 @@
    "fieldtype": "Section Break",
    "label": "More Information",
    "oldfieldtype": "Section Break",
-   "options": "fa fa-file-text"
+   "options": "fa fa-file-text",
+   "permlevel": 4
   },
   {
    "fieldname": "company",
@@ -500,6 +559,7 @@
    "oldfieldname": "company",
    "oldfieldtype": "Link",
    "options": "Company",
+   "permlevel": 4,
    "print_hide": 1,
    "remember_last_selected_value": 1,
    "reqd": 1,
@@ -513,7 +573,8 @@
    "label": "Campaign",
    "oldfieldname": "campaign",
    "oldfieldtype": "Link",
-   "options": "Campaign"
+   "options": "Campaign",
+   "permlevel": 4
   },
   {
    "default": "Today",
@@ -523,6 +584,7 @@
    "no_copy": 1,
    "oldfieldname": "transaction_date",
    "oldfieldtype": "Date",
+   "permlevel": 4,
    "reqd": 1,
    "width": "50px"
   },
@@ -530,13 +592,15 @@
    "fieldname": "column_break1",
    "fieldtype": "Column Break",
    "oldfieldtype": "Column Break",
+   "permlevel": 4,
    "width": "50%"
   },
   {
    "fieldname": "language",
    "fieldtype": "Link",
    "label": "Print Language",
-   "options": "Language"
+   "options": "Language",
+   "permlevel": 4
   },
   {
    "fieldname": "amended_from",
@@ -547,6 +611,7 @@
    "oldfieldname": "amended_from",
    "oldfieldtype": "Data",
    "options": "Opportunity",
+   "permlevel": 4,
    "print_hide": 1,
    "read_only": 1,
    "width": "150px"
@@ -556,7 +621,8 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Title",
-   "no_copy": 1
+   "no_copy": 1,
+   "permlevel": 4
   },
   {
    "bold": 1,
@@ -564,13 +630,15 @@
    "fieldtype": "Duration",
    "label": "First Response Time",
    "no_copy": 1,
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "depends_on": "eval:doc.status===\"Lost\"",
    "fieldname": "lost_detail_section",
    "fieldtype": "Section Break",
-   "label": "Lost Reasons"
+   "label": "Lost Reasons",
+   "permlevel": 4
   },
   {
    "depends_on": "eval:doc.status===\"Lost\"",
@@ -578,6 +646,7 @@
    "fieldtype": "Table MultiSelect",
    "label": "Lost Reasons",
    "options": "Opportunity Lost Reason Detail",
+   "permlevel": 4,
    "read_only": 1
   },
   {
@@ -585,29 +654,34 @@
    "fieldtype": "Small Text",
    "label": "Detailed Reason",
    "no_copy": 1,
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "fieldname": "column_break_56",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "competitors",
    "fieldtype": "Table MultiSelect",
    "label": "Competitors",
    "options": "Competitor Detail",
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "fieldname": "contact_info",
    "fieldtype": "Tab Break",
    "label": "Contacts",
-   "options": "fa fa-bullhorn"
+   "options": "fa fa-bullhorn",
+   "permlevel": 4
   },
   {
    "fieldname": "primary_contact_section",
    "fieldtype": "Section Break",
-   "label": "Primary Contact"
+   "label": "Primary Contact",
+   "permlevel": 4
   },
   {
    "depends_on": "eval:doc.party_name",
@@ -615,59 +689,70 @@
    "fieldtype": "Link",
    "label": "Contact Person",
    "options": "Contact",
+   "permlevel": 4,
    "print_hide": 1
   },
   {
    "fieldname": "job_title",
    "fieldtype": "Data",
-   "label": "Job Title"
+   "label": "Job Title",
+   "permlevel": 4
   },
   {
    "fieldname": "column_break_54",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "contact_email",
    "fieldtype": "Data",
    "label": "Contact Email",
-   "options": "Email"
+   "options": "Email",
+   "permlevel": 4
   },
   {
    "fieldname": "contact_mobile",
    "fieldtype": "Data",
    "label": "Contact Mobile",
-   "options": "Phone"
+   "options": "Phone",
+   "permlevel": 4
   },
   {
    "fieldname": "column_break_22",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "whatsapp",
    "fieldtype": "Data",
    "label": "WhatsApp",
-   "options": "Phone"
+   "options": "Phone",
+   "permlevel": 4
   },
   {
    "fieldname": "phone",
    "fieldtype": "Data",
    "label": "Phone",
-   "options": "Phone"
+   "options": "Phone",
+   "permlevel": 4
   },
   {
    "fieldname": "phone_ext",
    "fieldtype": "Data",
-   "label": "Phone Ext."
+   "label": "Phone Ext.",
+   "permlevel": 4
   },
   {
    "fieldname": "address_contact_section",
    "fieldtype": "Section Break",
-   "label": "Address & Contact"
+   "label": "Address & Contact",
+   "permlevel": 4
   },
   {
    "fieldname": "address_html",
    "fieldtype": "HTML",
-   "label": "Address HTML"
+   "label": "Address HTML",
+   "permlevel": 4
   },
   {
    "depends_on": "eval:doc.party_name",
@@ -676,6 +761,7 @@
    "hidden": 1,
    "label": "Customer / Lead Address",
    "options": "Address",
+   "permlevel": 4,
    "print_hide": 1
   },
   {
@@ -685,16 +771,19 @@
    "label": "Address",
    "oldfieldname": "address",
    "oldfieldtype": "Small Text",
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "fieldname": "column_break3",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "contact_html",
    "fieldtype": "HTML",
-   "label": "Contact HTML"
+   "label": "Contact HTML",
+   "permlevel": 4
   },
   {
    "depends_on": "eval:doc.opportunity_from=='Customer' && doc.party_name",
@@ -702,19 +791,22 @@
    "fieldtype": "Small Text",
    "in_global_search": 1,
    "label": "Contact",
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "fieldname": "items_section",
    "fieldtype": "Tab Break",
    "label": "Items",
-   "options": "fa fa-shopping-cart"
+   "options": "fa fa-shopping-cart",
+   "permlevel": 4
   },
   {
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
-   "options": "Opportunity Item"
+   "options": "Opportunity Item",
+   "permlevel": 4
   },
   {
    "default": "Hotels",
@@ -723,92 +815,108 @@
    "hidden": 1,
    "label": "Price List",
    "options": "Price List",
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "fieldname": "custom_warehouse",
    "fieldtype": "Link",
    "label": "Warehouse",
-   "options": "Warehouse"
+   "options": "Warehouse",
+   "permlevel": 4
   },
   {
    "fieldname": "section_break_32",
    "fieldtype": "Section Break",
-   "hide_border": 1
+   "hide_border": 1,
+   "permlevel": 4
   },
   {
    "fieldname": "base_total",
    "fieldtype": "Currency",
    "label": "Total (Company Currency)",
    "options": "Company:company:default_currency",
+   "permlevel": 4,
    "print_hide": 1,
    "read_only": 1
   },
   {
    "fieldname": "column_break_33",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "total",
    "fieldtype": "Currency",
    "label": "Total",
    "options": "currency",
+   "permlevel": 4,
    "read_only": 1
   },
   {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "activities_tab",
    "fieldtype": "Tab Break",
-   "label": "Activities"
+   "label": "Activities",
+   "permlevel": 4
   },
   {
    "fieldname": "open_activities_html",
    "fieldtype": "HTML",
-   "label": "Open Activities HTML"
+   "label": "Open Activities HTML",
+   "permlevel": 4
   },
   {
    "fieldname": "all_activities_section",
    "fieldtype": "Section Break",
-   "label": "All Activities"
+   "label": "All Activities",
+   "permlevel": 4
   },
   {
    "fieldname": "all_activities_html",
    "fieldtype": "HTML",
-   "label": "All Activities HTML"
+   "label": "All Activities HTML",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_scope",
    "fieldtype": "Tab Break",
-   "label": "Scope"
+   "label": "Scope",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_scope_description",
    "fieldtype": "Text Editor",
    "label": "Scope Description",
+   "permlevel": 1,
    "translatable": 1
   },
   {
    "fieldname": "custom_deliverables",
    "fieldtype": "Table",
    "label": "Deliverables",
-   "options": "Scope Deliverables"
+   "options": "Scope Deliverables",
+   "permlevel": 1
   },
   {
    "fieldname": "custom_out_of_scope",
    "fieldtype": "Text",
    "label": "Out of Scope",
+   "permlevel": 1,
    "translatable": 1
   },
   {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "notes_tab",
    "fieldtype": "Tab Break",
-   "label": "Comments"
+   "label": "Comments",
+   "permlevel": 4
   },
   {
    "fieldname": "notes_html",
    "fieldtype": "HTML",
-   "label": "Notes HTML"
+   "label": "Notes HTML",
+   "permlevel": 4
   },
   {
    "fieldname": "notes",
@@ -816,166 +924,197 @@
    "hidden": 1,
    "label": "Notes",
    "no_copy": 1,
-   "options": "CRM Note"
+   "options": "CRM Note",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_qa",
    "fieldtype": "Tab Break",
-   "label": "QA"
+   "label": "QA",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_qa_report",
    "fieldtype": "Attach",
-   "label": "QA Report"
+   "label": "QA Report",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_survey",
    "fieldtype": "Tab Break",
-   "label": "Survey"
+   "label": "Survey",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_section_break_ikapp",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "permlevel": 4
   },
   {
    "fieldname": "column_break_aqzc",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_survey_attachment",
    "fieldtype": "Attach",
-   "label": "Survey Attachment"
+   "label": "Survey Attachment",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_section_break_nixpu",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_surveyors",
    "fieldtype": "Table",
    "label": "Surveyors",
-   "options": "Technical Surveyor"
+   "options": "Technical Surveyor",
+   "permlevel": 2
   },
   {
    "fieldname": "custom_technical",
    "fieldtype": "Tab Break",
-   "label": "Technical"
+   "label": "Technical",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_technical_survey_template_table",
    "fieldtype": "Table",
    "label": "Technical Survey Template Table",
-   "options": "Technical Survey Template Table"
+   "options": "Technical Survey Template Table",
+   "permlevel": 3
   },
   {
    "fieldname": "technical_data_tab",
    "fieldtype": "Tab Break",
-   "label": "Technical Data"
+   "label": "Technical Data",
+   "permlevel": 4
   },
   {
    "default": "0",
    "fieldname": "custom_service_active",
    "fieldtype": "Check",
-   "label": "Service Active?"
+   "label": "Service Active?",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_speed__mbps",
    "fieldtype": "Data",
    "label": "Speed / Mbps",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "column_break_xwwq",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_vlan",
    "fieldtype": "Data",
    "label": "VLAN",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_public_ip",
    "fieldtype": "Data",
    "label": "Public IP",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_section_break_l8lcr",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_main_site",
    "fieldtype": "Data",
    "label": "Main Site",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_mngmt_ip__ap",
    "fieldtype": "Data",
    "label": "Mngmt IP - AP",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_mngmt_ip__sm",
    "fieldtype": "Data",
    "label": "Mngmt IP - SM",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_column_break_lhvyg",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_link_equipment_typemodel__fiber",
    "fieldtype": "Data",
    "label": "Link (Equipment) Type\\Model \\ Fiber",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_link_p2p__p2mp_ptosector",
    "fieldtype": "Data",
    "label": "Link P2P \\ P2MP (P-To-Sector)",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_ssid__password_",
    "fieldtype": "Password",
-   "label": "SSID - Password "
+   "label": "SSID - Password ",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_column_break_12u3j",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_username",
    "fieldtype": "Data",
    "label": "Username",
+   "permlevel": 4,
    "translatable": 1
   },
   {
    "fieldname": "custom_password_",
    "fieldtype": "Password",
-   "label": "Password "
+   "label": "Password ",
+   "permlevel": 4
   },
   {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
    "label": "Connections",
+   "permlevel": 4,
    "show_dashboard": 1
   },
   {
    "fieldname": "custom_logs",
    "fieldtype": "Tab Break",
    "ignore_user_permissions": 1,
-   "label": "Logs"
+   "label": "Logs",
+   "permlevel": 4
   },
   {
    "fieldname": "custom_audit_log",
    "fieldtype": "Table",
    "label": "Audit Log",
    "options": "Opportunity Log",
+   "permlevel": 4,
    "read_only": 1
   },
   {
@@ -991,6 +1130,7 @@
    "fieldname": "supplier_quotations_tab",
    "fieldtype": "Tab Break",
    "label": "Supplier Quotations",
+   "permlevel": 4,
    "read_only": 1
   },
   {
@@ -999,13 +1139,25 @@
    "label": "Opportunity Supplier Quotation Table",
    "no_copy": 1,
    "options": "Opportunity Supplier Quotation Table",
+   "permlevel": 4,
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_customer_branch",
+   "fieldtype": "Select",
+   "label": "Customer Branch"
+  },
+  {
+   "fieldname": "custom_customer_branch_id",
+   "fieldtype": "Select",
+   "label": "Customer Branch ID",
    "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "icon": "fa fa-info-sign",
  "links": [],
- "modified": "2026-05-13 01:37:40.358728",
+ "modified": "2026-07-20 04:58:13.133836",
  "modified_by": "Administrator",
  "module": "Ion Crm Sales",
  "name": "Opportunity ISP",
@@ -1016,10 +1168,11 @@
    "create": 1,
    "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "ISP Sales",
+   "role": "System Manager",
    "share": 1,
    "write": 1
   },
@@ -1028,11 +1181,30 @@
    "delete": 1,
    "email": 1,
    "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales Manager",
+   "role": "ISP Account Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Surveyor Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Engineer",
    "share": 1,
    "write": 1
   }

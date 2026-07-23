@@ -70,6 +70,18 @@
     "parent": "PMO",
     "parentfield": "roles",
     "parenttype": "Role Profile",
+    "role": "Hotels Account Manager"
+   },
+   {
+    "parent": "PMO",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "SM Account Manager"
+   },
+   {
+    "parent": "PMO",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
     "role": "Surveyor Manager"
    },
    {
@@ -77,18 +89,6 @@
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Sales User"
-   },
-   {
-    "parent": "PMO",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "Hotels Sales"
-   },
-   {
-    "parent": "PMO",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "S&M Sales"
    },
    {
     "parent": "PMO",
@@ -127,7 +127,7 @@
     "parent": "CCO",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "Tenders Sales"
+    "role": "Tenders Account Manager"
    },
    {
     "parent": "CCO",
@@ -160,7 +160,7 @@
     "parent": "GM",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "Tenders Sales"
+    "role": "Tenders Account Manager"
    },
    {
     "parent": "GM",
@@ -310,6 +310,12 @@
     "parent": "CTO",
     "parentfield": "roles",
     "parenttype": "Role Profile",
+    "role": "Tenders Account Manager"
+   },
+   {
+    "parent": "CTO",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
     "role": "Surveyor Manager"
    },
    {
@@ -317,12 +323,6 @@
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Dedicated QA"
-   },
-   {
-    "parent": "CTO",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "Tenders Sales"
    },
    {
     "parent": "CTO",
@@ -601,13 +601,13 @@
     "parent": "Finance",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "Sales User"
+    "role": "Hotels Account Manager"
    },
    {
     "parent": "Finance",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "Hotels Sales"
+    "role": "Sales User"
    },
    {
     "parent": "Finance",
@@ -703,6 +703,12 @@
     "parent": "CXO TEAM",
     "parentfield": "roles",
     "parenttype": "Role Profile",
+    "role": "Tenders Account Manager"
+   },
+   {
+    "parent": "CXO TEAM",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
     "role": "Manufacturing User"
    },
    {
@@ -740,12 +746,6 @@
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Accounts Manager"
-   },
-   {
-    "parent": "CXO TEAM",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "Tenders Sales"
    },
    {
     "parent": "CXO TEAM",
@@ -817,6 +817,18 @@
     "parent": "AM",
     "parentfield": "roles",
     "parenttype": "Role Profile",
+    "role": "Hotels Account Manager"
+   },
+   {
+    "parent": "AM",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "SM Account Manager"
+   },
+   {
+    "parent": "AM",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
     "role": "Dedicated Sales"
    },
    {
@@ -853,12 +865,6 @@
     "parent": "AM",
     "parentfield": "roles",
     "parenttype": "Role Profile",
-    "role": "Hotels Sales"
-   },
-   {
-    "parent": "AM",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
     "role": "Hotels QA"
    },
    {
@@ -872,12 +878,6 @@
     "parentfield": "roles",
     "parenttype": "Role Profile",
     "role": "Hotels Scope"
-   },
-   {
-    "parent": "AM",
-    "parentfield": "roles",
-    "parenttype": "Role Profile",
-    "role": "S&M Sales"
    },
    {
     "parent": "AM",

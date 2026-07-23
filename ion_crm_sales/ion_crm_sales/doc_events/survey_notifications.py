@@ -4,39 +4,58 @@ import frappe
 from frappe import _
 from frappe.utils import get_url_to_form
 
-TABLE_FIELD = "custom_surveyors"  # child table field on parent doctypes
 CHILD_DOCTYPE = "Technical Surveyor"  # child row doctype
 SURVEYOR_FIELD = "surveyor"  # Link to User on child row
 DEPARTMENT_FIELD = "department"  # department field on child row
 TEMPLATE_FIELD = "template"  # Link to Technical Survey Template
-QA_TABLE_FIELD = "custom_technical_survey_template_table"  # Q&A table on Opportunity
+
+SURVEY_FIELDS = {
+    "Opportunity": {
+        "surveyor_table": "custom_surveyors",
+        "qa_table": "custom_technical_survey_template_table",
+    },
+    "Opportunity SM": {
+        "surveyor_table": "custom_surveyors",
+        "qa_table": "custom_technical_survey_template_table",
+    },
+    "Opportunity Hotels": {
+        "surveyor_table": "custom_surveyors",
+        "qa_table": "custom_technical_survey_template_table",
+    },
+    "Opportunity ISP": {
+        "surveyor_table": "custom_surveyors",
+        "qa_table": "custom_technical_survey_template_table",
+    },
+    "Opportunity Tenders": {
+        "surveyor_table": "custom_surveyors",
+        "qa_table": "custom_technical_survey_template_table",
+    },
+    "Hotspot": {
+        "surveyor_table": "surveyor_table",
+        "qa_table": "technical_survey_template_table",
+    },
+}
 
 
 def on_before_save(doc, method):
-    """On save:
-    1. Populate custom_technical_survey_template_table with questions from all
-       templates selected in custom_surveyors.
-    2. Send notification email to newly added surveyors with their template
-       questions and a link to the Opportunity.
-
-    Works for: Opportunity, Opportunity SM, Opportunity Hotels, Opportunity Tenders.
-    """
-    current_rows = doc.get(TABLE_FIELD) or []
-
-    # --- Step 1: Populate the Q&A table with template questions -----------
-    _populate_survey_questions(doc, current_rows)
-
-    # --- Step 2: Detect newly added surveyor rows and notify --------------
-    prev = doc.get_doc_before_save()
-    if not prev:
-        added_rows = current_rows[:]  # first save: all present rows are "added"
-    else:
-        previous_rows = prev.get(TABLE_FIELD) or []
-        prev_names = {r.name for r in previous_rows}
-        added_rows = [r for r in current_rows if r.name not in prev_names]
-
-    if not added_rows:
+    """Populate survey questions, notify new surveyors, and enforce completion."""
+    fields = SURVEY_FIELDS.get(doc.doctype)
+    if not fields:
         return
+
+    surveyor_table = fields["surveyor_table"]
+    qa_table = fields["qa_table"]
+    current_rows = doc.get(surveyor_table) or []
+
+    _populate_survey_questions(doc, current_rows, qa_table)
+    _validate_survey_completion(doc, qa_table)
+
+    previous = doc.get_doc_before_save()
+    if not previous:
+        added_rows = current_rows[:]
+    else:
+        previous_names = {row.name for row in (previous.get(surveyor_table) or [])}
+        added_rows = [row for row in current_rows if row.name not in previous_names]
 
     for row in added_rows:
         if row.doctype != CHILD_DOCTYPE:
@@ -48,61 +67,75 @@ def on_before_save(doc, method):
             continue
 
         recipient_email = _get_user_email(user_id)
-        if not recipient_email:
-            continue
-
-        _send_survey_notification(doc, row, recipient_email, template_name)
+        if recipient_email:
+            _send_survey_notification(doc, row, recipient_email, template_name)
 
 
-def _populate_survey_questions(doc, surveyor_rows):
-    """Clear and re-populate the Q&A table from all unique templates in
-    custom_surveyors.  Preserves existing answers if the question+template
-    combination already exists."""
-
-    # Build a lookup of existing answers so we don't lose them on re-save.
+def _populate_survey_questions(doc, surveyor_rows, qa_table):
+    """Rebuild questions from unique templates while preserving answers."""
     existing_answers = {}
-    for qa_row in doc.get(QA_TABLE_FIELD) or []:
+    for qa_row in doc.get(qa_table) or []:
         key = (qa_row.get("template"), qa_row.get("question"))
         if qa_row.get("answer"):
             existing_answers[key] = qa_row.get("answer")
 
-    # Collect unique templates from surveyor rows
     templates_seen = set()
     ordered_templates = []
     for row in surveyor_rows:
-        tpl = row.get(TEMPLATE_FIELD)
-        if tpl and tpl not in templates_seen:
-            templates_seen.add(tpl)
-            ordered_templates.append(tpl)
+        template = row.get(TEMPLATE_FIELD)
+        if template and template not in templates_seen:
+            templates_seen.add(template)
+            ordered_templates.append(template)
 
-    # Clear the Q&A table and re-build from templates
-    doc.set(QA_TABLE_FIELD, [])
+    doc.set(qa_table, [])
 
-    for tpl_name in ordered_templates:
+    for template_name in ordered_templates:
         try:
-            tpl_doc = frappe.get_doc("Technical Survey Template", tpl_name)
+            template_doc = frappe.get_doc("Technical Survey Template", template_name)
         except frappe.DoesNotExistError:
             continue
 
-        for tpl_row in tpl_doc.get("technical_survey_template_table") or []:
-            question = tpl_row.get("question")
+        for template_row in template_doc.get("technical_survey_template_table") or []:
+            question = template_row.get("question")
             if not question:
                 continue
 
-            key = (tpl_name, question)
+            key = (template_name, question)
             doc.append(
-                QA_TABLE_FIELD,
+                qa_table,
                 {
                     "question": question,
-                    "template": tpl_name,
+                    "template": template_name,
                     "answer": existing_answers.get(key, ""),
                 },
             )
 
 
+def _validate_survey_completion(doc, qa_table):
+    """Require every generated question to be answered before Surveyed."""
+    previous = doc.get_doc_before_save()
+    if (
+        doc.get("workflow_state") != "Surveyed"
+        or not previous
+        or previous.get("workflow_state") == "Surveyed"
+    ):
+        return
+
+    unanswered = [
+        row for row in (doc.get(qa_table) or []) if not (row.get("answer") or "").strip()
+    ]
+    if unanswered:
+        frappe.throw(
+            _(
+                "Complete all survey answers before moving to Surveyed. "
+                "{0} question(s) remain unanswered."
+            ).format(len(unanswered))
+        )
+
+
 def _send_survey_notification(doc, row, recipient_email, template_name):
     """Send an email notification to a surveyor with the template questions
-    and a direct link to the Opportunity."""
+    and a direct link to the source document."""
 
     dept = row.get(DEPARTMENT_FIELD) or _("(No Department)")
     doc_url = get_url_to_form(doc.doctype, doc.name)
@@ -212,7 +245,7 @@ def _get_user_email(user_id: str) -> str | None:
 @frappe.validate_and_sanitize_search_inputs
 def get_surveyors_by_department(doctype, txt, searchfield, start, page_len, filters):
     """Return User records whose linked Employee belongs to the given department.
-    Used as a custom link query for the surveyor field in custom_surveyors table."""
+    Used as a custom link query for surveyor child tables."""
     department = filters.get("department")
     if not department:
         return []

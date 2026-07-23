@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-13 13:38:22.642478",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "branch_customer",
+  "column_break_dzxk",
+  "branch_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "branch_customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Branch Customer",
+   "options": "Branch Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_dzxk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "branch_id",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Branch ID",
+   "non_negative": 1,
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-13 13:39:38.372215",
+ "modified_by": "Administrator",
+ "module": "Ion Crm Sales",
+ "name": "Branch Customer Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

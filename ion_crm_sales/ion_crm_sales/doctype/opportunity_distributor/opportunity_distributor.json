@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-06 19:43:03.259981",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "distributor",
+  "column_break_pvwl",
+  "territory",
+  "section_break_nhab",
+  "address_html",
+  "column_break_fniq",
+  "contact_html",
+  "section_break_dpsv",
+  "type",
+  "distributors",
+  "column_break_fquv",
+  "services"
+ ],
+ "fields": [
+  {
+   "fieldname": "distributor",
+   "fieldtype": "Link",
+   "label": "Distributor",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "column_break_pvwl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "distributor.territory",
+   "fieldname": "territory",
+   "fieldtype": "Link",
+   "label": "Territory",
+   "options": "Territory",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.distributor",
+   "fieldname": "section_break_nhab",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "address_html",
+   "fieldtype": "HTML",
+   "label": "Address HTML",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fniq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_html",
+   "fieldtype": "HTML",
+   "label": "Contact HTML",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_dpsv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "\nGroup\nSub-Group"
+  },
+  {
+   "depends_on": "eval:doc.type == 'Group'",
+   "fieldname": "distributors",
+   "fieldtype": "Table",
+   "label": "Distributors",
+   "options": "Distributors"
+  },
+  {
+   "fieldname": "column_break_fquv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "services",
+   "fieldtype": "Table",
+   "label": "Services",
+   "options": "Services"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "OPDT-.YYYY.-"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-06 20:22:26.783841",
+ "modified_by": "Administrator",
+ "module": "Ion Crm Sales",
+ "name": "Opportunity Distributor",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -17,23 +17,27 @@
    "fieldtype": "Small Text",
    "in_list_view": 1,
    "label": "Question",
-   "reqd": 1
+   "reqd": 1,
+   "permlevel": 3
   },
   {
    "fieldname": "column_break_lkeo",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "permlevel": 3
   },
   {
    "fieldname": "answer",
    "fieldtype": "Small Text",
    "in_list_view": 1,
-   "label": "Answer"
+   "label": "Answer",
+   "permlevel": 3
   },
   {
    "fieldname": "template",
    "fieldtype": "Link",
    "label": "Template",
-   "options": "Technical Survey Template"
+   "options": "Technical Survey Template",
+   "permlevel": 3
   }
  ],
  "grid_page_length": 50,
