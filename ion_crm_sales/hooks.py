@@ -80,8 +80,15 @@ doc_events = {
             "ion_crm_sales.ion_crm_sales.doc_events.sales_team_allocation.normalize_sales_team_allocation_for_sales_categories",
         ],
         "before_insert": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_insert",
-        "validate": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.validate",
+        "validate": [
+            "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.validate",
+            "ion_crm_sales.ion_crm_sales.doc_events.sales_order_serial_batch.validate",
+        ],
         "before_submit": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_handlers.before_submit",
+        "on_update": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_serial_batch.link_bundles",
+        "on_submit": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_serial_batch.link_bundles",
+        "on_cancel": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_serial_batch.unlink_bundles",
+        "on_trash": "ion_crm_sales.ion_crm_sales.doc_events.sales_order_serial_batch.unlink_bundles",
     },
     "Payment Entry": {
         "on_submit": "ion_crm_sales.ion_crm_sales.commission.triggers._touch_related_sheets",
@@ -205,7 +212,10 @@ doctype_js = {
     "Opportunity ISP": "public/js/opportunity_survey.js",
     "Hotspot": "public/js/opportunity_survey.js",
     "Quotation": "public/js/quotation_customer_branch.js",
-    "Sales Order": "public/js/sales_order_contract.js",
+    "Sales Order": [
+        "public/js/sales_order_contract.js",
+        "public/js/sales_order_serial_batch.js",
+    ],
     "Sales Invoice": "public/js/sales_order_contract.js",
     "Material Request": "public/js/material_request.js",
     "Delivery Note": "public/js/delivery_note.js",
@@ -220,6 +230,7 @@ override_whitelisted_methods = {
     "erpnext.crm.doctype.opportunity.opportunity.make_supplier_quotation": "ion_crm_sales.opportunity.make_supplier_quotation",
     "erpnext.selling.doctype.quotation.quotation.make_sales_order": "ion_crm_sales.quotation.make_sales_order",
     "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice": "ion_crm_sales.sales_order.make_sales_invoice",
+    "erpnext.selling.doctype.sales_order.sales_order.make_delivery_note": "ion_crm_sales.sales_order.make_delivery_note",
     "erpnext.buying.doctype.request_for_quotation.request_for_quotation.make_supplier_quotation_from_rfq": "ion_crm_sales.request_for_quotation.make_supplier_quotation_from_rfq",
     "erpnext.buying.doctype.request_for_quotation.request_for_quotation.create_supplier_quotation": "ion_crm_sales.request_for_quotation.create_supplier_quotation",
 }
